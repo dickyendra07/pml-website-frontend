@@ -1,26 +1,70 @@
 # PML Website Frontend
 
-Frontend application for Pharma Metrics Labs website.
+Frontend application for Pharma Metrics Labs corporate website.
 
-## Stack
+## Technology Stack
 
-- Next.js
-- React
+- Next.js 16
+- React 19
 - TypeScript
 - Tailwind CSS
 
-## Features
+## Main Features
 
-- Public Website
-- Admin CMS Interface
-- Media Library Integration
-- Content Management Interface
+### Public Website
+
+- Multilingual website (English / Indonesia)
+- Corporate profile pages
+- Services pages
+- Facilities pages
+- Insight pages
+- Contact and proposal submission flow
+
+### Admin CMS
+
+- Content management interface
+- Facility management
+- Insight management
+- Catalogue management
+- Careers management
+- Popup management
+- Media library integration
+- Website settings management
 
 ## Development
 
 Install dependencies:
 
-```bash
 npm install
+
+Run development server:
+
 npm run dev
+
+Build production:
+
 npm run build
+
+Run lint:
+
+npm run lint
+
+## Repository Structure
+
+app/          Next.js App Router pages  
+components/   Reusable UI components  
+lib/          API and utility functions  
+public/       Static assets  
+i18n/         Language configuration  
+data/         Static content data  
+
+## Backend Repository
+
+Backend is maintained separately.
+
+Technology:
+
+- NestJS
+- Prisma
+- PostgreSQL
+- Redis
