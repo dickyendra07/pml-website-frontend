@@ -1,0 +1,4 @@
+Contact: mailto:info@pharmametriclabs.com
+Preferred-Languages: en, id
+Canonical: https://pml-website-labs.vercel.app/.well-known/security.txt
+Policy: https://pml-website-labs.vercel.app/privacy-policy

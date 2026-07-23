@@ -1,0 +1,45 @@
+{
+  "common": {
+    "language": "Language",
+    "english": "English",
+    "indonesian": "Bahasa Indonesia",
+    "requestProposal": "Request a Proposal",
+    "learnMore": "Learn More",
+    "viewAll": "View All",
+    "readMore": "Read More",
+    "submit": "Submit Request"
+  },
+  "navigation": {
+    "home": "Home",
+    "aboutUs": "About Us",
+    "services": "Services",
+    "facilities": "Facilities",
+    "insight": "Insight",
+    "careers": "Careers",
+    "contact": "Contact"
+  },
+  "aboutMenu": {
+    "expertsTeam": "Experts & Team",
+    "companyProfile": "Company Profile",
+    "clientsNetwork": "Clients & Network",
+    "catalogue": "Catalogue"
+  },
+  "servicesMenu": {
+    "contractAnalysis": "Contract Analysis",
+    "babeStudy": "BA/BE Study",
+    "clinicalTrial": "Clinical Trial",
+    "regulatoryManagement": "Regulatory Management"
+  },
+  "facilitiesMenu": {
+    "clinicalFacilities": "Clinical Facilities",
+    "analyticalFacilities": "Analytical Facilities",
+    "supportingFacilities": "Supporting Facilities",
+    "vrGallery": "VR Gallery"
+  },
+  "insightMenu": {
+    "articles": "Articles",
+    "news": "News",
+    "publications": "Publications",
+    "faq": "FAQ"
+  }
+}
