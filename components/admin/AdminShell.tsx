@@ -22,6 +22,7 @@ const navItems = [
   { label: "Facilities", href: "/admin/facilities", icon: "F" },
   { label: "Media", href: "/admin/media", icon: "M" },
   { label: "Popups", href: "/admin/popups", icon: "P" },
+  { label: "Legal Pages", href: "/admin/legal-pages", icon: "L" },
   { label: "Settings", href: "/admin/settings", icon: "S" },
   { label: "System Health", href: "/admin/health", icon: "+" },
 ];
