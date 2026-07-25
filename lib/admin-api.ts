@@ -1115,3 +1115,59 @@ export async function getApiHealth() {
 
   return parseJsonResponse<ApiHealthResult>(response);
 }
+
+export type LegalPageType =
+  | "PRIVACY_POLICY"
+  | "COOKIE_POLICY";
+
+export type LegalPage = {
+  id: string;
+  type: LegalPageType;
+  titleEn: string;
+  contentEn: string;
+  seoTitleEn: string | null;
+  metaDescriptionEn: string | null;
+  titleId: string | null;
+  contentId: string | null;
+  seoTitleId: string | null;
+  metaDescriptionId: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function getAdminLegalPages(
+  token: string,
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/admin/legal-pages`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    },
+  );
+
+  return parseJsonResponse<LegalPage[]>(response);
+}
+
+export async function updateAdminLegalPage(
+  token: string,
+  type: LegalPageType,
+  payload: Partial<LegalPage>,
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/admin/legal-pages/${type}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return parseJsonResponse<LegalPage>(response);
+}
