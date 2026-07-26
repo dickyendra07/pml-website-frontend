@@ -66,7 +66,7 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 }
 
 export async function loginAdmin(email: string, password: string) {
-  const response = await fetch(`${API_BASE_URL}/admin/auth/login`, {
+  const response = await fetch(`${API_BASE_URL}/api/admin/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -78,7 +78,7 @@ export async function loginAdmin(email: string, password: string) {
 }
 
 export async function getCurrentAdmin(token: string) {
-  const response = await fetch(`${API_BASE_URL}/admin/auth/me`, {
+  const response = await fetch(`${API_BASE_URL}/api/admin/auth/me`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -88,7 +88,7 @@ export async function getCurrentAdmin(token: string) {
 }
 
 export async function logoutAdmin(token: string) {
-  const response = await fetch(`${API_BASE_URL}/admin/auth/logout`, {
+  const response = await fetch(`${API_BASE_URL}/api/admin/auth/logout`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -99,7 +99,7 @@ export async function logoutAdmin(token: string) {
 }
 
 export async function getAdminProposals(token: string) {
-  const response = await fetch(`${API_BASE_URL}/admin/proposals`, {
+  const response = await fetch(`${API_BASE_URL}/api/admin/proposals`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -110,7 +110,7 @@ export async function getAdminProposals(token: string) {
 }
 
 export async function getAdminProposalDetail(token: string, id: string) {
-  const response = await fetch(`${API_BASE_URL}/admin/proposals/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/api/admin/proposals/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -125,7 +125,7 @@ export async function updateAdminProposalStatus(
   id: string,
   status: InquiryStatus,
 ) {
-  const response = await fetch(`${API_BASE_URL}/admin/proposals/${id}/status`, {
+  const response = await fetch(`${API_BASE_URL}/api/admin/proposals/${id}/status`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
