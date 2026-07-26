@@ -132,6 +132,84 @@ export default function LegalPolicyLayout({
                           font-medium
                           leading-8
                           text-black/65
+
+                          [&_h1]:mt-10
+                          [&_h1]:text-4xl
+                          [&_h1]:font-black
+                          [&_h1]:leading-tight
+                          [&_h1]:tracking-tight
+                          [&_h1]:text-black
+                          first:[&_h1]:mt-0
+
+                          [&_h2]:mt-10
+                          [&_h2]:text-2xl
+                          [&_h2]:font-black
+                          [&_h2]:leading-tight
+                          [&_h2]:tracking-tight
+                          [&_h2]:text-black
+                          md:[&_h2]:text-3xl
+                          first:[&_h2]:mt-0
+
+                          [&_h3]:mt-8
+                          [&_h3]:text-xl
+                          [&_h3]:font-black
+                          [&_h3]:leading-tight
+                          [&_h3]:text-black
+                          md:[&_h3]:text-2xl
+
+                          [&_p]:mt-4
+                          [&_p]:text-base
+                          [&_p]:font-medium
+                          [&_p]:leading-8
+                          [&_p]:text-black/65
+
+                          [&_ul]:mt-5
+                          [&_ul]:grid
+                          [&_ul]:gap-3
+                          [&_ul]:pl-0
+
+                          [&_ol]:mt-5
+                          [&_ol]:grid
+                          [&_ol]:list-decimal
+                          [&_ol]:gap-3
+                          [&_ol]:pl-6
+
+                          [&_li]:relative
+                          [&_li]:pl-5
+                          [&_li]:text-base
+                          [&_li]:font-medium
+                          [&_li]:leading-8
+                          [&_li]:text-black/65
+
+                          [&_ul>li]:before:absolute
+                          [&_ul>li]:before:left-0
+                          [&_ul>li]:before:top-[0.78rem]
+                          [&_ul>li]:before:h-2
+                          [&_ul>li]:before:w-2
+                          [&_ul>li]:before:rounded-full
+                          [&_ul>li]:before:bg-[#039147]
+
+                          [&_li_p]:mt-0
+
+                          [&_blockquote]:mt-6
+                          [&_blockquote]:rounded-2xl
+                          [&_blockquote]:border-l-4
+                          [&_blockquote]:border-[#039147]
+                          [&_blockquote]:bg-[#f6faf7]
+                          [&_blockquote]:px-5
+                          [&_blockquote]:py-4
+                          [&_blockquote]:italic
+                          [&_blockquote]:text-black/65
+
+                          [&_a]:font-bold
+                          [&_a]:text-[#039147]
+                          [&_a]:underline
+                          [&_a]:decoration-[#039147]/30
+                          [&_a]:underline-offset-4
+                          hover:[&_a]:decoration-[#039147]
+
+                          [&_strong]:font-black
+                          [&_strong]:text-black
                         "
                         dangerouslySetInnerHTML={{
                           __html: paragraph,
