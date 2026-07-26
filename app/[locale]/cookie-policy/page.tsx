@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import LegalPolicyLayout, {
   type LegalSection,
 } from "@/components/pages/LegalPolicyLayout";
