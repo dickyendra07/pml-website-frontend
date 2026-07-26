@@ -23,9 +23,7 @@ export async function getLegalPage(
     const response = await fetch(
       `${API_BASE_URL}/api/legal-pages/${type}`,
       {
-        next: {
-          revalidate: 300,
-        },
+        cache: "no-store",
       },
     );
 
