@@ -21,7 +21,7 @@ export async function getLegalPage(
 ): Promise<LegalPageContent | null> {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/api/legal-pages/${type}`,
+      `${API_BASE_URL}/legal-pages/${type}`,
       {
         cache: "no-store",
       },
