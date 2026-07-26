@@ -79,6 +79,7 @@ export default async function PrivacyPolicyPage({
       ? cmsPage?.contentId
       : cmsPage?.contentEn) || "";
 
+
   const sections: LegalSection[] = content
     ? [
         {
