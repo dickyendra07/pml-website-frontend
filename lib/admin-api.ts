@@ -30,8 +30,12 @@ export type ProposalSubmission = {
 };
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
-  (process.env.NODE_ENV === "development" ? "http://localhost:4000/api" : "");
+  (
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
+    (process.env.NODE_ENV === "development"
+      ? "http://localhost:4000"
+      : "")
+  ) + "/api";
 
 const hasApiBaseUrl = API_BASE_URL.length > 0;
 
@@ -66,7 +70,7 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 }
 
 export async function loginAdmin(email: string, password: string) {
-  const response = await fetch(`${API_BASE_URL}/api/admin/auth/login`, {
+  const response = await fetch(`${API_BASE_URL}/admin/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -78,7 +82,7 @@ export async function loginAdmin(email: string, password: string) {
 }
 
 export async function getCurrentAdmin(token: string) {
-  const response = await fetch(`${API_BASE_URL}/api/admin/auth/me`, {
+  const response = await fetch(`${API_BASE_URL}/admin/auth/me`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -88,7 +92,7 @@ export async function getCurrentAdmin(token: string) {
 }
 
 export async function logoutAdmin(token: string) {
-  const response = await fetch(`${API_BASE_URL}/api/admin/auth/logout`, {
+  const response = await fetch(`${API_BASE_URL}/admin/auth/logout`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -99,7 +103,7 @@ export async function logoutAdmin(token: string) {
 }
 
 export async function getAdminProposals(token: string) {
-  const response = await fetch(`${API_BASE_URL}/api/admin/proposals`, {
+  const response = await fetch(`${API_BASE_URL}/admin/proposals`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -110,7 +114,7 @@ export async function getAdminProposals(token: string) {
 }
 
 export async function getAdminProposalDetail(token: string, id: string) {
-  const response = await fetch(`${API_BASE_URL}/api/admin/proposals/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/admin/proposals/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -125,7 +129,7 @@ export async function updateAdminProposalStatus(
   id: string,
   status: InquiryStatus,
 ) {
-  const response = await fetch(`${API_BASE_URL}/api/admin/proposals/${id}/status`, {
+  const response = await fetch(`${API_BASE_URL}/admin/proposals/${id}/status`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
