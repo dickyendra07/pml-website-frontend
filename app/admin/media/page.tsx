@@ -633,28 +633,33 @@ export default function AdminMediaPage() {
               </div>
 
               {filteredItems.length > 0 ? (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <>
                   {viewMode === "grid" ? (
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid w-full grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                       {filteredItems.map((item) => (
                         <button
                           key={item.id}
                           type="button"
                           onClick={() => selectMedia(item)}
-                          className={`group overflow-hidden rounded-[24px] border text-left transition ${
+                          className={`group min-w-0 overflow-hidden rounded-[26px] border text-left transition ${
                             item.id === form.id
-                              ? "border-[#039147] bg-[#eaf8f0] shadow-[0_14px_40px_rgba(3,145,71,0.12)]"
-                              : "border-black/5 bg-white hover:-translate-y-1 hover:border-[#039147]/40 hover:shadow-[0_18px_50px_rgba(0,0,0,0.08)]"
+                              ? "border-[#039147] bg-[#eaf8f0] shadow-[0_18px_45px_rgba(3,145,71,0.14)]"
+                              : "border-black/5 bg-white hover:-translate-y-1 hover:border-[#039147]/30 hover:shadow-[0_18px_50px_rgba(0,0,0,0.08)]"
                           }`}
                         >
-                          <div className="relative h-40 bg-[#f6faf7]">
+                          <div className="relative h-[190px] overflow-hidden bg-[#f6faf7]">
                             {item.type === "IMAGE" ? (
                               <Image
                                 src={getAssetUrl(item.url)}
                                 alt={item.altText || item.originalName || item.filename}
                                 fill
                                 sizes="320px"
-                                className="object-cover transition duration-500 group-hover:scale-105"
+                                className={`transition duration-500 group-hover:scale-105 ${
+                                  item.originalName?.toLowerCase().includes("logo") ||
+                                  item.filename?.toLowerCase().includes("logo")
+                                    ? "object-contain p-8"
+                                    : "object-cover"
+                                }`}
                                 unoptimized
                               />
                             ) : (
@@ -666,18 +671,24 @@ export default function AdminMediaPage() {
                             )}
                           </div>
 
-                          <div className="p-4">
-                            <p className="line-clamp-1 text-sm font-black text-black">
+                          <div className="space-y-3 p-5">
+                            <p className="line-clamp-2 min-h-[42px] break-all text-sm font-black leading-5 text-black">
                               {item.originalName || item.filename}
                             </p>
 
-                            <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.08em] text-black/40">
-                              <span>{item.type}</span>
-                              <span>•</span>
-                              <span>{formatSize(item.size)}</span>
-                              <span>•</span>
-                              <span>{item.folder || "general"}</span>
+                            <div className="flex flex-wrap gap-2">
+                              <span className="rounded-full bg-[#eaf8f0] px-3 py-1 text-[10px] font-black uppercase text-[#039147]">
+                                {item.type}
+                              </span>
+
+                              <span className="rounded-full bg-black/5 px-3 py-1 text-[10px] font-black uppercase text-black/45">
+                                {item.folder || "general"}
+                              </span>
                             </div>
+
+                            <p className="text-xs font-bold text-black/40">
+                              {formatSize(item.size)} • {formatDate(item.createdAt)}
+                            </p>
                           </div>
                         </button>
                       ))}
@@ -744,7 +755,7 @@ export default function AdminMediaPage() {
                       ))}
                     </div>
                   )}
-                </div>
+                </>
               ) : (
                 <div className="flex min-h-72 items-center justify-center rounded-[24px] border border-dashed border-black/10 bg-[#f6faf7] p-8 text-center">
                   <div>
