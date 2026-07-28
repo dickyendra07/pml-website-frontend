@@ -641,13 +641,13 @@ export default function AdminMediaPage() {
                           key={item.id}
                           type="button"
                           onClick={() => selectMedia(item)}
-                          className={`group min-w-0 overflow-hidden rounded-[26px] border text-left transition ${
+                          className={`group relative min-w-0 overflow-hidden rounded-[22px] border text-left transition focus:outline-none ${
                             item.id === form.id
                               ? "border-[#039147] bg-[#eaf8f0] shadow-[0_18px_45px_rgba(3,145,71,0.14)]"
                               : "border-black/5 bg-white hover:-translate-y-1 hover:border-[#039147]/30 hover:shadow-[0_18px_50px_rgba(0,0,0,0.08)]"
                           }`}
                         >
-                          <div className="relative h-[190px] overflow-hidden bg-[#f6faf7]">
+                          <div className="relative aspect-square overflow-hidden bg-[#f6faf7]">
                             {item.type === "IMAGE" ? (
                               <Image
                                 src={getAssetUrl(item.url)}
@@ -671,7 +671,7 @@ export default function AdminMediaPage() {
                             )}
                           </div>
 
-                          <div className="space-y-3 p-5">
+                          <div className="space-y-2 p-4">
                             <p className="line-clamp-2 min-h-[42px] break-all text-sm font-black leading-5 text-black">
                               {item.originalName || item.filename}
                             </p>
