@@ -120,6 +120,7 @@ export default function AdminMediaPage() {
   const [sortMode, setSortMode] = useState<
     "newest" | "oldest" | "name-asc" | "name-desc" | "largest"
   >("newest");
+  const [copiedId, setCopiedId] = useState("");
 
   const selectedMedia = useMemo(() => {
     return items.find((item) => item.id === form.id) || null;
@@ -438,9 +439,16 @@ export default function AdminMediaPage() {
     }
   };
 
-  const copyUrl = async (url: string) => {
+  const copyUrl = async (url: string, id: string) => {
     try {
       await navigator.clipboard.writeText(url);
+
+      setCopiedId(id);
+
+      setTimeout(() => {
+        setCopiedId("");
+      }, 2000);
+
       setMessageTone("success");
       setMessage("Media URL copied to clipboard.");
     } catch {
@@ -764,20 +772,26 @@ export default function AdminMediaPage() {
                                 tabIndex={0}
                                 onClick={(event) => {
                                   event.stopPropagation();
-                                  copyUrl(getAssetUrl(item.url));
+                                  copyUrl(getAssetUrl(item.url), item.id);
                                 }}
                                 onKeyDown={(event) => {
                                   if (event.key === "Enter") {
                                     event.stopPropagation();
-                                    copyUrl(getAssetUrl(item.url));
+                                    copyUrl(getAssetUrl(item.url), item.id);
                                   }
                                 }}
                                 className="cursor-pointer rounded-full bg-[#039147] px-4 py-2 text-xs font-black text-white transition hover:-translate-y-0.5"
                               >
-                                Copy URL
+                                {copiedId === item.id
+                                  ? "✓ Copied"
+                                  : "Copy URL"}
                               </div>
                             </div>
                           </div>
+
+                          <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-black shadow-sm">
+                            {item.type}
+                          </span>
 
                           <div className="space-y-2 p-4">
                             <p className="line-clamp-2 min-h-[42px] break-all text-sm font-black leading-5 text-black">
@@ -982,7 +996,7 @@ export default function AdminMediaPage() {
                     <button
                       type="button"
                       onClick={() =>
-                        void copyUrl(selectedMedia.url)
+                        void copyUrl(selectedMedia.url, selectedMedia.id)
                       }
                       className="flex-1 rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-black text-black transition hover:border-[#039147] hover:text-[#039147]"
                     >
