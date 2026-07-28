@@ -3,6 +3,7 @@
 import Image from "next/image";
 import {
   ChangeEvent,
+  DragEvent,
   FormEvent,
   useCallback,
   useEffect,
@@ -110,6 +111,7 @@ export default function AdminMediaPage() {
     useState<"success" | "error">("success");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [uploadFolder, setUploadFolder] = useState("general");
   const [search, setSearch] = useState("");
   const [folderFilter, setFolderFilter] = useState("all");
@@ -311,6 +313,36 @@ export default function AdminMediaPage() {
     }
   };
 
+  const handleDrop = (
+    event: DragEvent<HTMLLabelElement>,
+  ) => {
+    event.preventDefault();
+
+    setIsDragging(false);
+
+    const file = event.dataTransfer.files?.[0];
+
+    if (!file) return;
+
+    const dataTransfer = new DataTransfer();
+
+    dataTransfer.items.add(file);
+
+    const input = document.querySelector(
+      "#media-upload-input",
+    ) as HTMLInputElement | null;
+
+    if (!input) return;
+
+    input.files = dataTransfer.files;
+
+    input.dispatchEvent(
+      new Event("change", {
+        bubbles: true,
+      }),
+    );
+  };
+
   const handleSave = async (
     event: FormEvent<HTMLFormElement>,
   ) => {
@@ -435,39 +467,6 @@ export default function AdminMediaPage() {
           </p>
         </div>
 
-        <div className="grid w-full gap-3 rounded-[26px] border border-black/5 bg-white p-4 shadow-[0_18px_50px_rgba(0,0,0,0.06)] sm:grid-cols-[220px_auto] xl:w-auto">
-          <label className="grid gap-2">
-            <span className="text-xs font-black uppercase tracking-[0.14em] text-black/45">
-              Upload Folder
-            </span>
-
-            <select
-              value={uploadFolder}
-              onChange={(event) =>
-                setUploadFolder(event.target.value)
-              }
-              className="h-11 rounded-2xl border border-black/10 bg-white px-4 text-sm font-bold text-black outline-none focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
-            >
-              {availableFolders.map((folder) => (
-                <option key={folder} value={folder}>
-                  {folder}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="mt-auto inline-flex h-11 cursor-pointer items-center justify-center rounded-full bg-[#039147] px-6 text-sm font-black text-white shadow-[0_16px_40px_rgba(3,145,71,0.2)] transition hover:-translate-y-0.5">
-            {uploading ? "Uploading..." : "Upload Media"}
-
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp,application/pdf,video/mp4"
-              onChange={handleUpload}
-              disabled={uploading}
-              className="sr-only"
-            />
-          </label>
-        </div>
       </div>
 
       {status === "loading" ? (
@@ -631,6 +630,83 @@ export default function AdminMediaPage() {
                   </span>
                 </div>
               </div>
+
+        <p className="mb-3 text-xs font-black uppercase tracking-[0.16em] text-[#039147]">
+          Upload New Asset
+        </p>
+
+        <div className="mb-6 grid w-full gap-4 rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(0,0,0,0.06)]">
+          <label
+            onDragOver={(event) => {
+              event.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            className={`group flex min-h-[180px] w-full cursor-pointer flex-col items-center justify-center rounded-[24px] border-2 border-dashed transition ${
+              isDragging
+                ? "border-[#039147] bg-[#eaf8f0]"
+                : "border-black/10 bg-[#f6faf7] hover:border-[#039147]/50"
+            }`}
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-7 w-7 text-[#039147]"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M12 16V4" />
+                <path d="M7 9l5-5 5 5" />
+                <path d="M5 20h14" />
+              </svg>
+            </div>
+
+            <p className="mt-4 text-sm font-black text-black">
+              {uploading
+                ? "Uploading..."
+                : "Drop file here or click"}
+            </p>
+
+            <p className="mt-2 text-xs font-bold text-black/40">
+              PNG JPG WEBP PDF MP4
+            </p>
+
+            <input
+              id="media-upload-input"
+              type="file"
+              accept="image/png,image/jpeg,image/webp,application/pdf,video/mp4"
+              onChange={handleUpload}
+              disabled={uploading}
+              className="sr-only"
+            />
+          </label>
+
+          <label className="grid gap-2">
+            <span className="text-xs font-black uppercase tracking-[0.14em] text-black/45">
+              Upload Folder
+            </span>
+
+            <select
+              value={uploadFolder}
+              onChange={(event) =>
+                setUploadFolder(event.target.value)
+              }
+              className="h-11 rounded-2xl border border-black/10 bg-white px-4 text-sm font-bold text-black outline-none focus:border-[#039147]"
+            >
+              {availableFolders.map((folder) => (
+                <option key={folder} value={folder}>
+                  {folder}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+              <p className="mb-4 text-xs font-black uppercase tracking-[0.16em] text-black/40">
+                Media Collection
+              </p>
 
               {filteredItems.length > 0 ? (
                 <>
