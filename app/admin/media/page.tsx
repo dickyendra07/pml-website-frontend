@@ -1,7 +1,14 @@
-"use client";
+use client";
 
 import Image from "next/image";
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
 import {
@@ -30,22 +37,52 @@ const emptyForm: MediaForm = {
   type: "OTHER",
 };
 
+const folderOptions = [
+  "general",
+  "homepage",
+  "facilities",
+  "catalogues",
+  "insights",
+  "careers",
+  "popups",
+];
+
 function formatSize(size: number | null) {
   if (!size) return "-";
   if (size < 1024) return `${size} B`;
-  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  if (size < 1024 * 1024) {
+    return `${(size / 1024).toFixed(1)} KB`;
+  }
+
   return `${(size / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "-";
+
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
 }
 
 function getAssetUrl(value: string) {
   if (!value) return "";
 
-  if (value.startsWith("http")) return value;
+  if (
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("data:")
+  ) {
+    return value;
+  }
 
   if (value.startsWith("/uploads")) {
     const apiOrigin =
       process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-      (process.env.NODE_ENV === "development" ? "http://localhost:4000" : "");
+      (process.env.NODE_ENV === "development"
+        ? "http://localhost:4000"
+        : "");
 
     return `${apiOrigin}${value}`;
   }
@@ -66,27 +103,75 @@ function mapMediaToForm(item: MediaAssetItem): MediaForm {
 export default function AdminMediaPage() {
   const [items, setItems] = useState<MediaAssetItem[]>([]);
   const [form, setForm] = useState<MediaForm>(emptyForm);
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] =
+    useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
+  const [messageTone, setMessageTone] =
+    useState<"success" | "error">("success");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadFolder, setUploadFolder] = useState("general");
+  const [search, setSearch] = useState("");
+  const [folderFilter, setFolderFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
 
   const selectedMedia = useMemo(() => {
     return items.find((item) => item.id === form.id) || null;
   }, [items, form.id]);
+
+  const availableFolders = useMemo(() => {
+    const dynamicFolders = items
+      .map((item) => item.folder)
+      .filter((value): value is string => Boolean(value));
+
+    return Array.from(
+      new Set([...folderOptions, ...dynamicFolders]),
+    ).sort();
+  }, [items]);
+
+  const filteredItems = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+
+    return items.filter((item) => {
+      const matchesSearch =
+        !keyword ||
+        [
+          item.originalName,
+          item.filename,
+          item.altText,
+          item.caption,
+          item.folder,
+          item.type,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword);
+
+      const matchesFolder =
+        folderFilter === "all" ||
+        (item.folder || "general") === folderFilter;
+
+      const matchesType =
+        typeFilter === "all" || item.type === typeFilter;
+
+      return matchesSearch && matchesFolder && matchesType;
+    });
+  }, [items, search, folderFilter, typeFilter]);
 
   const loadMedia = useCallback(async () => {
     const token = getAdminToken();
 
     if (!token) {
       setStatus("error");
+      setMessageTone("error");
       setMessage("Admin token not found. Please login again.");
       return;
     }
 
     try {
       const data = await getAdminMediaAssets(token);
+
       setItems(data);
       setStatus("success");
 
@@ -95,11 +180,26 @@ export default function AdminMediaPage() {
           return mapMediaToForm(data[0]);
         }
 
+        if (current.id) {
+          const refreshed = data.find(
+            (item) => item.id === current.id,
+          );
+
+          if (refreshed) {
+            return mapMediaToForm(refreshed);
+          }
+        }
+
         return current;
       });
     } catch (error) {
       setStatus("error");
-      setMessage(error instanceof Error ? error.message : "Failed to load media library.");
+      setMessageTone("error");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to load media library.",
+      );
     }
   }, []);
 
@@ -113,14 +213,24 @@ export default function AdminMediaPage() {
     };
   }, [loadMedia]);
 
-  const updateField = (key: keyof MediaForm, value: string) => {
+  const selectMedia = (item: MediaAssetItem) => {
+    setForm(mapMediaToForm(item));
+    setMessage("");
+  };
+
+  const updateField = (
+    key: keyof MediaForm,
+    value: string,
+  ) => {
     setForm((current) => ({
       ...current,
       [key]: value,
     }));
   };
 
-  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0] || null;
     event.target.value = "";
 
@@ -129,6 +239,7 @@ export default function AdminMediaPage() {
     const token = getAdminToken();
 
     if (!token) {
+      setMessageTone("error");
       setMessage("Admin token not found. Please login again.");
       return;
     }
@@ -137,28 +248,44 @@ export default function AdminMediaPage() {
     setMessage("");
 
     try {
-      const uploaded = await uploadAdminMediaAsset(token, file, uploadFolder || "general");
+      const uploaded = await uploadAdminMediaAsset(
+        token,
+        file,
+        uploadFolder || "general",
+      );
+
       setForm(mapMediaToForm(uploaded));
-      await loadMedia();
+      setMessageTone("success");
       setMessage("Media uploaded successfully.");
+
+      await loadMedia();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Failed to upload media.");
+      setMessageTone("error");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to upload media.",
+      );
     } finally {
       setUploading(false);
     }
   };
 
-  const handleSave = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSave = async (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
 
     if (!form.id) {
-      setMessage("Please select media asset first.");
+      setMessageTone("error");
+      setMessage("Please select a media asset first.");
       return;
     }
 
     const token = getAdminToken();
 
     if (!token) {
+      setMessageTone("error");
       setMessage("Admin token not found. Please login again.");
       return;
     }
@@ -167,18 +294,29 @@ export default function AdminMediaPage() {
     setMessage("");
 
     try {
-      const updated = await updateAdminMediaAsset(token, form.id, {
-        altText: form.altText || null,
-        caption: form.caption || null,
-        folder: form.folder || null,
-        type: form.type,
-      });
+      const updated = await updateAdminMediaAsset(
+        token,
+        form.id,
+        {
+          altText: form.altText.trim() || null,
+          caption: form.caption.trim() || null,
+          folder: form.folder.trim() || "general",
+          type: form.type,
+        },
+      );
 
       setForm(mapMediaToForm(updated));
-      await loadMedia();
+      setMessageTone("success");
       setMessage("Media metadata updated successfully.");
+
+      await loadMedia();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Failed to update media.");
+      setMessageTone("error");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to update media.",
+      );
     } finally {
       setSaving(false);
     }
@@ -186,72 +324,101 @@ export default function AdminMediaPage() {
 
   const handleDelete = async () => {
     if (!form.id) {
-      setMessage("Please select media asset first.");
-      return;
-    }
-
-    const token = getAdminToken();
-
-    if (!token) {
-      setMessage("Admin token not found. Please login again.");
+      setMessageTone("error");
+      setMessage("Please select a media asset first.");
       return;
     }
 
     const confirmed = window.confirm(
-      "Delete this media library record? The uploaded physical file may still remain on server storage."
+      "Delete this media library record? The physical uploaded file may remain on server storage.",
     );
 
     if (!confirmed) return;
+
+    const token = getAdminToken();
+
+    if (!token) {
+      setMessageTone("error");
+      setMessage("Admin token not found. Please login again.");
+      return;
+    }
 
     setSaving(true);
     setMessage("");
 
     try {
       await deleteAdminMediaAsset(token, form.id);
+
       setForm(emptyForm);
-      await loadMedia();
+      setMessageTone("success");
       setMessage("Media library record deleted successfully.");
+
+      await loadMedia();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Failed to delete media.");
+      setMessageTone("error");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete media.",
+      );
     } finally {
       setSaving(false);
     }
   };
 
   const copyUrl = async (url: string) => {
-    await navigator.clipboard.writeText(url);
-    setMessage("Media URL copied to clipboard.");
+    try {
+      await navigator.clipboard.writeText(url);
+      setMessageTone("success");
+      setMessage("Media URL copied to clipboard.");
+    } catch {
+      setMessageTone("error");
+      setMessage("Unable to copy media URL.");
+    }
   };
 
   return (
     <AdminShell>
-      <div className="mb-8 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+      <div className="mb-8 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#039147]">
             Media Library
           </p>
+
           <h1 className="mt-3 text-4xl font-black tracking-tight text-black md:text-5xl">
             Media Assets
           </h1>
+
           <p className="mt-4 max-w-3xl text-sm leading-7 text-black/50">
-            Upload, organize, preview, and copy media URLs for popup, catalogue, insight, homepage, and other CMS content.
+            Upload, organise, preview, and reuse images, PDFs,
+            documents, and videos across the PML CMS.
           </p>
         </div>
 
-        <div className="grid gap-3 rounded-[24px] border border-black/5 bg-white p-4">
+        <div className="grid w-full gap-3 rounded-[26px] border border-black/5 bg-white p-4 shadow-[0_18px_50px_rgba(0,0,0,0.06)] sm:grid-cols-[220px_auto] xl:w-auto">
           <label className="grid gap-2">
-            <span className="text-xs font-black uppercase tracking-[0.14em] text-black/50">
+            <span className="text-xs font-black uppercase tracking-[0.14em] text-black/45">
               Upload Folder
             </span>
-            <input
+
+            <select
               value={uploadFolder}
-              onChange={(event) => setUploadFolder(event.target.value)}
-              className="h-11 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none"
-            />
+              onChange={(event) =>
+                setUploadFolder(event.target.value)
+              }
+              className="h-11 rounded-2xl border border-black/10 bg-white px-4 text-sm font-bold text-black outline-none focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+            >
+              {availableFolders.map((folder) => (
+                <option key={folder} value={folder}>
+                  {folder}
+                </option>
+              ))}
+            </select>
           </label>
 
-          <label className="inline-flex cursor-pointer items-center justify-center rounded-full bg-[#039147] px-6 py-3 text-sm font-black text-white shadow-[0_18px_50px_rgba(3,145,71,0.22)] transition hover:-translate-y-0.5">
+          <label className="mt-auto inline-flex h-11 cursor-pointer items-center justify-center rounded-full bg-[#039147] px-6 text-sm font-black text-white shadow-[0_16px_40px_rgba(3,145,71,0.2)] transition hover:-translate-y-0.5">
             {uploading ? "Uploading..." : "Upload Media"}
+
             <input
               type="file"
               accept="image/png,image/jpeg,image/webp,application/pdf,video/mp4"
@@ -264,220 +431,423 @@ export default function AdminMediaPage() {
       </div>
 
       {status === "loading" ? (
-        <AdminState title="Loading media library" description="Please wait while the CMS loads media assets." />
+        <AdminState
+          title="Loading media library"
+          description="Please wait while the CMS loads media assets."
+        />
       ) : null}
 
       {status === "error" ? (
-        <AdminState title="Unable to load media library" description={message} tone="error" />
+        <AdminState
+          title="Unable to load media library"
+          description={message}
+          tone="error"
+        />
       ) : null}
 
       {status === "success" ? (
-        <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <section className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_22px_70px_rgba(0,0,0,0.08)] backdrop-blur md:p-7">
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <div>
+        <>
+          {message ? (
+            <div
+              className={`mb-6 rounded-2xl border p-4 text-sm font-bold ${
+                messageTone === "error"
+                  ? "border-red-200 bg-red-50 text-red-700"
+                  : "border-[#039147]/15 bg-[#eaf8f0] text-[#039147]"
+              }`}
+            >
+              {message}
+            </div>
+          ) : null}
+
+          <div className="mb-6 grid gap-4 rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(0,0,0,0.06)] md:grid-cols-[minmax(0,1fr)_220px_180px]">
+            <label className="grid gap-2">
+              <span className="text-xs font-black uppercase tracking-[0.12em] text-black/45">
+                Search Assets
+              </span>
+
+              <input
+                value={search}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+                placeholder="Search filename, caption, alt text, folder..."
+                className="h-12 rounded-2xl border border-black/10 bg-[#f6faf7] px-4 text-sm font-bold text-black outline-none placeholder:text-black/25 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+              />
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-xs font-black uppercase tracking-[0.12em] text-black/45">
+                Folder
+              </span>
+
+              <select
+                value={folderFilter}
+                onChange={(event) =>
+                  setFolderFilter(event.target.value)
+                }
+                className="h-12 rounded-2xl border border-black/10 bg-[#f6faf7] px-4 text-sm font-bold text-black outline-none focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+              >
+                <option value="all">All folders</option>
+
+                {availableFolders.map((folder) => (
+                  <option key={folder} value={folder}>
+                    {folder}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-xs font-black uppercase tracking-[0.12em] text-black/45">
+                Type
+              </span>
+
+              <select
+                value={typeFilter}
+                onChange={(event) =>
+                  setTypeFilter(event.target.value)
+                }
+                className="h-12 rounded-2xl border border-black/10 bg-[#f6faf7] px-4 text-sm font-bold text-black outline-none focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+              >
+                <option value="all">All types</option>
+                <option value="IMAGE">Image</option>
+                <option value="PDF">PDF</option>
+                <option value="VIDEO">Video</option>
+                <option value="DOCUMENT">Document</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_420px]">
+            <section className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_22px_70px_rgba(0,0,0,0.08)] md:p-7">
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-[#039147]">
+                    Library
+                  </p>
+
+                  <h2 className="mt-2 text-2xl font-black text-black">
+                    Uploaded Media
+                  </h2>
+                </div>
+
+                <span className="rounded-full bg-[#f6faf7] px-4 py-2 text-xs font-black text-black/45">
+                  {filteredItems.length} of {items.length} assets
+                </span>
+              </div>
+
+              {filteredItems.length > 0 ? (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredItems.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => selectMedia(item)}
+                      className={`group overflow-hidden rounded-[24px] border text-left transition ${
+                        item.id === form.id
+                          ? "border-[#039147] bg-[#eaf8f0] shadow-[0_14px_40px_rgba(3,145,71,0.12)]"
+                          : "border-black/5 bg-white hover:-translate-y-1 hover:border-[#039147]/40 hover:shadow-[0_18px_50px_rgba(0,0,0,0.08)]"
+                      }`}
+                    >
+                      <div className="relative h-40 bg-[#f6faf7]">
+                        {item.type === "IMAGE" ? (
+                          <Image
+                            src={getAssetUrl(item.url)}
+                            alt={
+                              item.altText ||
+                              item.originalName ||
+                              item.filename
+                            }
+                            fill
+                            sizes="320px"
+                            className="object-cover transition duration-500 group-hover:scale-105"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center px-4 text-center">
+                            <span className="rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-black/45">
+                              {item.type}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-4">
+                        <p className="line-clamp-1 text-sm font-black text-black">
+                          {item.originalName || item.filename}
+                        </p>
+
+                        <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.08em] text-black/40">
+                          <span>{item.type}</span>
+                          <span>•</span>
+                          <span>{formatSize(item.size)}</span>
+                          <span>•</span>
+                          <span>{item.folder || "general"}</span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex min-h-72 items-center justify-center rounded-[24px] border border-dashed border-black/10 bg-[#f6faf7] p-8 text-center">
+                  <div>
+                    <p className="text-sm font-black text-black/45">
+                      No matching media found
+                    </p>
+
+                    <p className="mt-2 text-xs leading-5 text-black/30">
+                      Adjust the search or filters, or upload a new
+                      asset.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className="h-fit rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_22px_70px_rgba(0,0,0,0.08)] md:p-7 xl:sticky xl:top-6">
+              <div className="mb-6">
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-[#039147]">
-                  Library
+                  Media Detail
                 </p>
+
                 <h2 className="mt-2 text-2xl font-black text-black">
-                  Uploaded Media
+                  Asset Metadata
                 </h2>
               </div>
 
-              <span className="rounded-full border border-black/5 bg-white5 px-4 py-2 text-xs font-black text-black/50">
-                {items.length} assets
-              </span>
-            </div>
-
-            {items.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {items.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      setForm(mapMediaToForm(item));
-                      setMessage("");
-                    }}
-                    className={`overflow-hidden rounded-[24px] border text-left transition ${
-                      item.id === form.id
-                        ? "border-[#039147] bg-[#eaf8f0]"
-                        : "border-black/5 bg-white5 hover:border-white/20 hover:bg-white"
-                    }`}
-                  >
-                    <div className="relative h-36 bg-black/40">
-                      {item.type === "IMAGE" ? (
+              {selectedMedia ? (
+                <>
+                  <div className="mb-5 overflow-hidden rounded-[24px] border border-black/5 bg-[#f6faf7]">
+                    {selectedMedia.type === "IMAGE" ? (
+                      <div className="relative h-64">
                         <Image
-                          src={getAssetUrl(item.url)}
-                          alt={item.altText || item.originalName || item.filename}
+                          src={getAssetUrl(selectedMedia.url)}
+                          alt={
+                            selectedMedia.altText ||
+                            selectedMedia.originalName ||
+                            selectedMedia.filename
+                          }
                           fill
-                          sizes="280px"
+                          sizes="420px"
                           className="object-cover"
                           unoptimized
                         />
-                      ) : (
-                        <div className="flex h-full items-center justify-center px-4 text-center text-xs font-black uppercase tracking-[0.14em] text-black/45">
-                          {item.type}
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    ) : selectedMedia.type === "VIDEO" ? (
+                      <video
+                        controls
+                        className="h-64 w-full bg-black object-contain"
+                        src={getAssetUrl(selectedMedia.url)}
+                      />
+                    ) : (
+                      <div className="flex h-44 items-center justify-center">
+                        <span className="rounded-full bg-white px-5 py-2 text-sm font-black uppercase tracking-[0.14em] text-black/45">
+                          {selectedMedia.type}
+                        </span>
+                      </div>
+                    )}
 
                     <div className="p-4">
-                      <p className="line-clamp-1 text-sm font-black text-black">
-                        {item.originalName || item.filename}
+                      <p className="break-all text-sm font-black text-black">
+                        {selectedMedia.originalName ||
+                          selectedMedia.filename}
                       </p>
-                      <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.1em] text-black/50">
-                        <span>{item.type}</span>
-                        <span>•</span>
-                        <span>{formatSize(item.size)}</span>
-                        <span>•</span>
-                        <span>{item.folder || "general"}</span>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-black/5 bg-white5 p-8 text-center text-sm font-bold text-black/45">
-                No media uploaded yet. Upload the first image, PDF, or document.
-              </div>
-            )}
-          </section>
 
-          <section className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_22px_70px_rgba(0,0,0,0.08)] backdrop-blur md:p-7">
-            <div className="mb-6">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#039147]">
-                Media Detail
-              </p>
-              <h2 className="mt-2 text-2xl font-black text-black">
-                Asset Metadata
-              </h2>
-            </div>
-
-            {selectedMedia ? (
-              <>
-                <div className="mb-5 overflow-hidden rounded-[24px] border border-black/5 bg-white">
-                  {selectedMedia.type === "IMAGE" ? (
-                    <div className="relative h-64">
-                      <Image
-                        src={getAssetUrl(selectedMedia.url)}
-                        alt={selectedMedia.altText || selectedMedia.originalName || selectedMedia.filename}
-                        fill
-                        sizes="420px"
-                        className="object-cover"
-                        unoptimized
-                      />
+                      <p className="mt-2 break-all text-xs leading-5 text-black/40">
+                        {selectedMedia.url}
+                      </p>
                     </div>
-                  ) : (
-                    <div className="flex h-40 items-center justify-center text-sm font-black uppercase tracking-[0.16em] text-black/45">
-                      {selectedMedia.type}
-                    </div>
-                  )}
-
-                  <div className="p-4">
-                    <p className="break-all text-sm font-black text-black">
-                      {selectedMedia.originalName || selectedMedia.filename}
-                    </p>
-                    <p className="mt-2 text-xs font-semibold text-black/50">
-                      {selectedMedia.mimeType || "-"} • {formatSize(selectedMedia.size)}
-                    </p>
                   </div>
-                </div>
 
-                <div className="mb-5 rounded-[20px] border border-black/5 bg-white5 p-4">
-                  <p className="mb-2 text-xs font-black uppercase tracking-[0.14em] text-black/50">
-                    Media URL
-                  </p>
-                  <p className="break-all rounded-2xl bg-white p-3 font-mono text-xs text-[#039147]">
-                    {selectedMedia.url}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => void copyUrl(selectedMedia.url)}
-                    className="mt-3 rounded-full bg-white px-5 py-2.5 text-xs font-black text-[#039147] transition hover:bg-[#039147] hover:text-white"
+                  <div className="mb-5 grid gap-3 rounded-[22px] bg-[#f6faf7] p-4 text-xs">
+                    <div className="flex justify-between gap-3">
+                      <span className="font-bold text-black/40">
+                        Type
+                      </span>
+                      <span className="font-black text-black">
+                        {selectedMedia.type}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between gap-3">
+                      <span className="font-bold text-black/40">
+                        Size
+                      </span>
+                      <span className="font-black text-black">
+                        {formatSize(selectedMedia.size)}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between gap-3">
+                      <span className="font-bold text-black/40">
+                        Folder
+                      </span>
+                      <span className="font-black text-black">
+                        {selectedMedia.folder || "general"}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between gap-3">
+                      <span className="font-bold text-black/40">
+                        Uploaded
+                      </span>
+                      <span className="text-right font-black text-black">
+                        {formatDate(selectedMedia.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mb-5 flex flex-col gap-3 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void copyUrl(selectedMedia.url)
+                      }
+                      className="flex-1 rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-black text-black transition hover:border-[#039147] hover:text-[#039147]"
+                    >
+                      Copy Relative URL
+                    </button>
+
+                    <a
+                      href={getAssetUrl(selectedMedia.url)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 rounded-full bg-black px-5 py-3 text-center text-sm font-black text-white transition hover:-translate-y-0.5"
+                    >
+                      Open Asset
+                    </a>
+                  </div>
+
+                  <form
+                    onSubmit={handleSave}
+                    className="grid gap-4"
                   >
-                    Copy URL
-                  </button>
-                </div>
-
-                <form onSubmit={handleSave} className="grid gap-5">
-                  <label className="grid gap-2">
-                    <span className="text-sm font-black text-black">Alt Text</span>
-                    <input
-                      value={form.altText}
-                      onChange={(event) => updateField("altText", event.target.value)}
-                      className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
-                    />
-                  </label>
-
-                  <label className="grid gap-2">
-                    <span className="text-sm font-black text-black">Caption</span>
-                    <textarea
-                      rows={3}
-                      value={form.caption}
-                      onChange={(event) => updateField("caption", event.target.value)}
-                      className="resize-none rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm font-bold leading-7 text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
-                    />
-                  </label>
-
-                  <div className="grid gap-5 md:grid-cols-2">
                     <label className="grid gap-2">
-                      <span className="text-sm font-black text-black">Folder</span>
+                      <span className="text-sm font-black text-black">
+                        Alt Text
+                      </span>
+
                       <input
-                        value={form.folder}
-                        onChange={(event) => updateField("folder", event.target.value)}
-                        className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+                        value={form.altText}
+                        onChange={(event) =>
+                          updateField(
+                            "altText",
+                            event.target.value,
+                          )
+                        }
+                        placeholder="Describe the image for accessibility"
+                        className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm font-bold text-black outline-none placeholder:text-black/25 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
                       />
                     </label>
 
                     <label className="grid gap-2">
-                      <span className="text-sm font-black text-black">Type</span>
+                      <span className="text-sm font-black text-black">
+                        Caption
+                      </span>
+
+                      <textarea
+                        rows={4}
+                        value={form.caption}
+                        onChange={(event) =>
+                          updateField(
+                            "caption",
+                            event.target.value,
+                          )
+                        }
+                        placeholder="Optional media caption"
+                        className="resize-y rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-semibold leading-6 text-black outline-none placeholder:text-black/25 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+                      />
+                    </label>
+
+                    <label className="grid gap-2">
+                      <span className="text-sm font-black text-black">
+                        Folder
+                      </span>
+
+                      <input
+                        value={form.folder}
+                        onChange={(event) =>
+                          updateField(
+                            "folder",
+                            event.target.value,
+                          )
+                        }
+                        list="media-folder-options"
+                        className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm font-bold text-black outline-none focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+                      />
+
+                      <datalist id="media-folder-options">
+                        {availableFolders.map((folder) => (
+                          <option key={folder} value={folder} />
+                        ))}
+                      </datalist>
+                    </label>
+
+                    <label className="grid gap-2">
+                      <span className="text-sm font-black text-black">
+                        Asset Type
+                      </span>
+
                       <select
                         value={form.type}
-                        onChange={(event) => updateField("type", event.target.value)}
-                        className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+                        onChange={(event) =>
+                          updateField(
+                            "type",
+                            event.target.value as MediaAssetType,
+                          )
+                        }
+                        className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm font-bold text-black outline-none focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
                       >
                         <option value="IMAGE">Image</option>
-                        <option value="DOCUMENT">Document</option>
+                        <option value="PDF">PDF</option>
                         <option value="VIDEO">Video</option>
+                        <option value="DOCUMENT">
+                          Document
+                        </option>
                         <option value="OTHER">Other</option>
                       </select>
                     </label>
-                  </div>
 
-                  {message ? (
-                    <div className="rounded-2xl border border-black/5 bg-white5 p-4 text-sm font-bold text-black/70">
-                      {message}
+                    <div className="mt-2 grid gap-3">
+                      <button
+                        type="submit"
+                        disabled={saving}
+                        className="rounded-full bg-[#039147] px-6 py-3.5 text-sm font-black text-white shadow-[0_16px_40px_rgba(3,145,71,0.2)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {saving
+                          ? "Saving Metadata..."
+                          : "Save Metadata"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleDelete}
+                        disabled={saving}
+                        className="rounded-full border border-red-200 bg-red-50 px-6 py-3.5 text-sm font-black text-red-600 transition hover:bg-red-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Delete Library Record
+                      </button>
                     </div>
-                  ) : null}
+                  </form>
+                </>
+              ) : (
+                <div className="flex min-h-72 items-center justify-center rounded-[24px] border border-dashed border-black/10 bg-[#f6faf7] p-8 text-center">
+                  <div>
+                    <p className="text-sm font-black text-black/45">
+                      No media selected
+                    </p>
 
-                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                    <button
-                      type="button"
-                      onClick={handleDelete}
-                      disabled={saving}
-                      className="rounded-full border border-red-400/30 bg-red-500/10 px-7 py-3.5 text-sm font-black text-red-200 transition hover:bg-red-500 hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      Delete Record
-                    </button>
-
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="rounded-full bg-[#039147] px-7 py-3.5 text-sm font-black text-black shadow-[0_18px_50px_rgba(3,145,71,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {saving ? "Saving..." : "Save Metadata"}
-                    </button>
+                    <p className="mt-2 text-xs leading-5 text-black/30">
+                      Select an asset from the library to preview
+                      and edit its metadata.
+                    </p>
                   </div>
-                </form>
-              </>
-            ) : (
-              <div className="rounded-2xl border border-black/5 bg-white5 p-8 text-center text-sm font-bold text-black/45">
-                Select a media asset to preview and edit metadata.
-              </div>
-            )}
-          </section>
-        </div>
+                </div>
+              )}
+            </section>
+          </div>
+        </>
       ) : null}
     </AdminShell>
   );
