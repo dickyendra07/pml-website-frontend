@@ -634,60 +634,116 @@ export default function AdminMediaPage() {
 
               {filteredItems.length > 0 ? (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredItems.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => selectMedia(item)}
-                      className={`group overflow-hidden rounded-[24px] border text-left transition ${
-                        item.id === form.id
-                          ? "border-[#039147] bg-[#eaf8f0] shadow-[0_14px_40px_rgba(3,145,71,0.12)]"
-                          : "border-black/5 bg-white hover:-translate-y-1 hover:border-[#039147]/40 hover:shadow-[0_18px_50px_rgba(0,0,0,0.08)]"
-                      }`}
-                    >
-                      <div className="relative h-40 bg-[#f6faf7]">
-                        {item.type === "IMAGE" ? (
-                          <Image
-                            src={getAssetUrl(item.url)}
-                            alt={
-                              item.altText ||
-                              item.originalName ||
-                              item.filename
-                            }
-                            fill
-                            sizes="320px"
-                            className={
-                              item.originalName?.toLowerCase().includes("logo") ||
-                              item.filename?.toLowerCase().includes("logo")
-                                ? "object-contain p-5 transition duration-500 group-hover:scale-105"
-                                : "object-cover transition duration-500 group-hover:scale-105"
-                            }
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center px-4 text-center">
-                            <span className="rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-black/45">
-                              {item.type}
-                            </span>
+                  {viewMode === "grid" ? (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {filteredItems.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => selectMedia(item)}
+                          className={`group overflow-hidden rounded-[24px] border text-left transition ${
+                            item.id === form.id
+                              ? "border-[#039147] bg-[#eaf8f0] shadow-[0_14px_40px_rgba(3,145,71,0.12)]"
+                              : "border-black/5 bg-white hover:-translate-y-1 hover:border-[#039147]/40 hover:shadow-[0_18px_50px_rgba(0,0,0,0.08)]"
+                          }`}
+                        >
+                          <div className="relative h-40 bg-[#f6faf7]">
+                            {item.type === "IMAGE" ? (
+                              <Image
+                                src={getAssetUrl(item.url)}
+                                alt={item.altText || item.originalName || item.filename}
+                                fill
+                                sizes="320px"
+                                className="object-cover transition duration-500 group-hover:scale-105"
+                                unoptimized
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center">
+                                <span className="rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-black/45">
+                                  {item.type}
+                                </span>
+                              </div>
+                            )}
                           </div>
-                        )}
+
+                          <div className="p-4">
+                            <p className="line-clamp-1 text-sm font-black text-black">
+                              {item.originalName || item.filename}
+                            </p>
+
+                            <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.08em] text-black/40">
+                              <span>{item.type}</span>
+                              <span>•</span>
+                              <span>{formatSize(item.size)}</span>
+                              <span>•</span>
+                              <span>{item.folder || "general"}</span>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="overflow-hidden rounded-[24px] border border-black/5">
+                      <div className="hidden grid-cols-[90px_1fr_120px_120px_120px_150px] gap-4 bg-[#f6faf7] px-5 py-3 text-[11px] font-black uppercase tracking-[0.1em] text-black/40 md:grid">
+                        <span>Preview</span>
+                        <span>File Name</span>
+                        <span>Type</span>
+                        <span>Folder</span>
+                        <span>Size</span>
+                        <span>Uploaded</span>
                       </div>
 
-                      <div className="p-4">
-                        <p className="line-clamp-1 text-sm font-black text-black">
-                          {item.originalName || item.filename}
-                        </p>
+                      {filteredItems.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => selectMedia(item)}
+                          className={`grid w-full gap-4 border-t px-5 py-4 text-left transition md:grid-cols-[90px_1fr_120px_120px_120px_150px] md:items-center ${
+                            item.id === form.id
+                              ? "bg-[#eaf8f0]"
+                              : "bg-white hover:bg-[#f6faf7]"
+                          }`}
+                        >
+                          <div className="relative h-16 w-16 overflow-hidden rounded-xl bg-[#f6faf7]">
+                            {item.type === "IMAGE" ? (
+                              <Image
+                                src={getAssetUrl(item.url)}
+                                alt={item.altText || item.originalName || item.filename}
+                                fill
+                                sizes="64px"
+                                className="object-cover"
+                                unoptimized
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-[10px] font-black text-black/40">
+                                {item.type}
+                              </div>
+                            )}
+                          </div>
 
-                        <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.08em] text-black/40">
-                          <span>{item.type}</span>
-                          <span>•</span>
-                          <span>{formatSize(item.size)}</span>
-                          <span>•</span>
-                          <span>{item.folder || "general"}</span>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+                          <span className="line-clamp-2 text-sm font-black text-black">
+                            {item.originalName || item.filename}
+                          </span>
+
+                          <span className="text-xs font-bold text-black/50">
+                            {item.type}
+                          </span>
+
+                          <span className="text-xs font-bold text-black/50">
+                            {item.folder || "general"}
+                          </span>
+
+                          <span className="text-xs font-bold text-black/50">
+                            {formatSize(item.size)}
+                          </span>
+
+                          <span className="text-xs font-bold text-black/50">
+                            {formatDate(item.createdAt)}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex min-h-72 items-center justify-center rounded-[24px] border border-dashed border-black/10 bg-[#f6faf7] p-8 text-center">
