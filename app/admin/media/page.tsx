@@ -114,6 +114,10 @@ export default function AdminMediaPage() {
   const [search, setSearch] = useState("");
   const [folderFilter, setFolderFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [sortMode, setSortMode] = useState<
+    "newest" | "oldest" | "name-asc" | "name-desc" | "largest"
+  >("newest");
 
   const selectedMedia = useMemo(() => {
     return items.find((item) => item.id === form.id) || null;
@@ -132,7 +136,7 @@ export default function AdminMediaPage() {
   const filteredItems = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
-    return items.filter((item) => {
+    const filtered = items.filter((item) => {
       const matchesSearch =
         !keyword ||
         [
@@ -157,7 +161,43 @@ export default function AdminMediaPage() {
 
       return matchesSearch && matchesFolder && matchesType;
     });
-  }, [items, search, folderFilter, typeFilter]);
+
+    return [...filtered].sort((a, b) => {
+      if (sortMode === "oldest") {
+        return (
+          new Date(a.createdAt).getTime() -
+          new Date(b.createdAt).getTime()
+        );
+      }
+
+      if (sortMode === "name-asc") {
+        return (a.originalName || a.filename).localeCompare(
+          b.originalName || b.filename,
+        );
+      }
+
+      if (sortMode === "name-desc") {
+        return (b.originalName || b.filename).localeCompare(
+          a.originalName || a.filename,
+        );
+      }
+
+      if (sortMode === "largest") {
+        return (b.size || 0) - (a.size || 0);
+      }
+
+      return (
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
+      );
+    });
+  }, [
+    items,
+    search,
+    folderFilter,
+    typeFilter,
+    sortMode,
+  ]);
 
   const loadMedia = useCallback(async () => {
     const token = getAdminToken();
@@ -499,6 +539,33 @@ export default function AdminMediaPage() {
 
             <label className="grid gap-2">
               <span className="text-xs font-black uppercase tracking-[0.12em] text-black/45">
+                Sort
+              </span>
+
+              <select
+                value={sortMode}
+                onChange={(event) =>
+                  setSortMode(
+                    event.target.value as
+                      | "newest"
+                      | "oldest"
+                      | "name-asc"
+                      | "name-desc"
+                      | "largest",
+                  )
+                }
+                className="h-12 rounded-2xl border border-black/10 bg-[#f6faf7] px-4 text-sm font-bold text-black outline-none focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+              >
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="name-asc">Name A-Z</option>
+                <option value="name-desc">Name Z-A</option>
+                <option value="largest">Largest File</option>
+              </select>
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-xs font-black uppercase tracking-[0.12em] text-black/45">
                 Type
               </span>
 
@@ -532,9 +599,37 @@ export default function AdminMediaPage() {
                   </h2>
                 </div>
 
-                <span className="rounded-full bg-[#f6faf7] px-4 py-2 text-xs font-black text-black/45">
-                  {filteredItems.length} of {items.length} assets
-                </span>
+                <div className="flex items-center gap-2">
+                  <div className="flex rounded-full border border-black/5 bg-[#f6faf7] p-1">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("grid")}
+                      className={`rounded-full px-3 py-1.5 text-xs font-black ${
+                        viewMode === "grid"
+                          ? "bg-[#039147] text-white"
+                          : "text-black/40"
+                      }`}
+                    >
+                      Grid
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("list")}
+                      className={`rounded-full px-3 py-1.5 text-xs font-black ${
+                        viewMode === "list"
+                          ? "bg-[#039147] text-white"
+                          : "text-black/40"
+                      }`}
+                    >
+                      List
+                    </button>
+                  </div>
+
+                  <span className="rounded-full bg-[#f6faf7] px-4 py-2 text-xs font-black text-black/45">
+                    {filteredItems.length} of {items.length} assets
+                  </span>
+                </div>
               </div>
 
               {filteredItems.length > 0 ? (
