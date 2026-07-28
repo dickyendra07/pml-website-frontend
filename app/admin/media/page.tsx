@@ -745,6 +745,38 @@ export default function AdminMediaPage() {
                                 </span>
                               </div>
                             )}
+
+                            <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition duration-300 group-hover:opacity-100">
+                              <a
+                                href={getAssetUrl(item.url)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="rounded-full bg-white px-4 py-2 text-xs font-black text-black transition hover:-translate-y-0.5"
+                                onClick={(event) =>
+                                  event.stopPropagation()
+                                }
+                              >
+                                Preview
+                              </a>
+
+                              <div
+                                role="button"
+                                tabIndex={0}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  copyUrl(getAssetUrl(item.url));
+                                }}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter") {
+                                    event.stopPropagation();
+                                    copyUrl(getAssetUrl(item.url));
+                                  }
+                                }}
+                                className="cursor-pointer rounded-full bg-[#039147] px-4 py-2 text-xs font-black text-white transition hover:-translate-y-0.5"
+                              >
+                                Copy URL
+                              </div>
+                            </div>
                           </div>
 
                           <div className="space-y-2 p-4">
