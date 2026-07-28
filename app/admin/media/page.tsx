@@ -561,7 +561,12 @@ export default function AdminMediaPage() {
                             }
                             fill
                             sizes="320px"
-                            className="object-cover transition duration-500 group-hover:scale-105"
+                            className={
+                              item.originalName?.toLowerCase().includes("logo") ||
+                              item.filename?.toLowerCase().includes("logo")
+                                ? "object-contain p-5 transition duration-500 group-hover:scale-105"
+                                : "object-cover transition duration-500 group-hover:scale-105"
+                            }
                             unoptimized
                           />
                         ) : (
@@ -630,7 +635,12 @@ export default function AdminMediaPage() {
                           }
                           fill
                           sizes="420px"
-                          className="object-cover"
+                          className={
+                            selectedMedia.originalName?.toLowerCase().includes("logo") ||
+                            selectedMedia.filename?.toLowerCase().includes("logo")
+                              ? "object-contain p-8"
+                              : "object-cover"
+                          }
                           unoptimized
                         />
                       </div>
