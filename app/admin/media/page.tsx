@@ -30,6 +30,13 @@ type MediaForm = {
   type: MediaAssetType;
 };
 
+type UploadQueueItem = {
+  id: string;
+  name: string;
+  progress: number;
+  status: "waiting" | "uploading" | "done" | "error";
+};
+
 const emptyForm: MediaForm = {
   id: "",
   altText: "",
@@ -112,6 +119,7 @@ export default function AdminMediaPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadQueue, setUploadQueue] = useState<UploadQueueItem[]>([]);
   const [uploadFolder, setUploadFolder] = useState("general");
   const [search, setSearch] = useState("");
   const [folderFilter, setFolderFilter] = useState("all");
@@ -271,13 +279,8 @@ export default function AdminMediaPage() {
     }));
   };
 
-  const handleUpload = async (
-    event: ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = event.target.files?.[0] || null;
-    event.target.value = "";
-
-    if (!file) return;
+  const processUploadFiles = async (files: File[]) => {
+    if (!files.length) return;
 
     const token = getAdminToken();
 
@@ -287,61 +290,99 @@ export default function AdminMediaPage() {
       return;
     }
 
+    const queue = files.map((file) => ({
+      id: `${file.name}-${Date.now()}-${Math.random()}`,
+      name: file.name,
+      progress: 0,
+      status: "waiting" as const,
+    }));
+
+    setUploadQueue(queue);
     setUploading(true);
     setMessage("");
 
-    try {
-      const uploaded = await uploadAdminMediaAsset(
-        token,
-        file,
-        uploadFolder || "general",
+    let lastUploaded: MediaAssetItem | null = null;
+
+    for (const item of queue) {
+      const file = files.find((entry) => entry.name === item.name);
+
+      if (!file) continue;
+
+      setUploadQueue((current) =>
+        current.map((upload) =>
+          upload.id === item.id
+            ? {
+                ...upload,
+                status: "uploading",
+                progress: 30,
+              }
+            : upload,
+        ),
       );
 
-      setForm(mapMediaToForm(uploaded));
-      setMessageTone("success");
-      setMessage("Media uploaded successfully.");
+      try {
+        const uploaded = await uploadAdminMediaAsset(
+          token,
+          file,
+          uploadFolder || "general",
+        );
 
-      await loadMedia();
-    } catch (error) {
-      setMessageTone("error");
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Failed to upload media.",
-      );
-    } finally {
-      setUploading(false);
+        lastUploaded = uploaded;
+
+        setUploadQueue((current) =>
+          current.map((upload) =>
+            upload.id === item.id
+              ? {
+                  ...upload,
+                  status: "done",
+                  progress: 100,
+                }
+              : upload,
+          ),
+        );
+      } catch {
+        setUploadQueue((current) =>
+          current.map((upload) =>
+            upload.id === item.id
+              ? {
+                  ...upload,
+                  status: "error",
+                  progress: 100,
+                }
+              : upload,
+          ),
+        );
+      }
     }
+
+    if (lastUploaded) {
+      setForm(mapMediaToForm(lastUploaded));
+      setMessageTone("success");
+      setMessage(`${files.length} media uploaded successfully.`);
+      await loadMedia();
+    }
+
+    setUploading(false);
   };
 
-  const handleDrop = (
-    event: DragEvent<HTMLLabelElement>,
+  const handleUpload = async (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+
+    await processUploadFiles(files);
+  };
+
+  const handleDrop = async (
+    event: React.DragEvent<HTMLLabelElement>,
   ) => {
     event.preventDefault();
-
     setIsDragging(false);
 
-    const file = event.dataTransfer.files?.[0];
+    const files = Array.from(event.dataTransfer.files || []);
 
-    if (!file) return;
-
-    const dataTransfer = new DataTransfer();
-
-    dataTransfer.items.add(file);
-
-    const input = document.querySelector(
-      "#media-upload-input",
-    ) as HTMLInputElement | null;
-
-    if (!input) return;
-
-    input.files = dataTransfer.files;
-
-    input.dispatchEvent(
-      new Event("change", {
-        bubbles: true,
-      }),
-    );
+    await processUploadFiles(files);
   };
 
   const handleSave = async (
@@ -690,6 +731,54 @@ export default function AdminMediaPage() {
               className="sr-only"
             />
           </label>
+
+          {uploadQueue.length > 0 ? (
+            <div className="rounded-[24px] border border-black/5 bg-[#f6faf7] p-4">
+              <p className="mb-3 text-xs font-black uppercase tracking-[0.14em] text-black/45">
+                Upload Queue
+              </p>
+
+              <div className="grid gap-3">
+                {uploadQueue.map((upload) => (
+                  <div
+                    key={upload.id}
+                    className="rounded-2xl bg-white p-3 shadow-sm"
+                  >
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <p className="truncate text-xs font-black text-black">
+                        {upload.name}
+                      </p>
+
+                      <span
+                        className={`text-[10px] font-black uppercase ${
+                          upload.status === "done"
+                            ? "text-[#039147]"
+                            : upload.status === "error"
+                              ? "text-red-500"
+                              : "text-black/40"
+                        }`}
+                      >
+                        {upload.status}
+                      </span>
+                    </div>
+
+                    <div className="h-2 overflow-hidden rounded-full bg-black/5">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          upload.status === "error"
+                            ? "bg-red-500"
+                            : "bg-[#039147]"
+                        }`}
+                        style={{
+                          width: `${upload.progress}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           <label className="grid gap-2">
             <span className="text-xs font-black uppercase tracking-[0.14em] text-black/45">
