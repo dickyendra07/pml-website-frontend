@@ -213,6 +213,46 @@ export async function updateAdminSettings(
 
 export type PageSeoStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
+
+export type AdminCatalogueRequest = {
+  id: string;
+  name: string;
+  company: string | null;
+  email: string;
+  phone: string | null;
+  message: string | null;
+  createdAt: string;
+  catalogue?: {
+    title: string;
+    serviceType: string | null;
+  } | null;
+};
+
+
+export async function getAdminCatalogueRequests(
+  token: string,
+): Promise<AdminCatalogueRequest[]> {
+
+  const response = await fetch(
+    `${API_BASE_URL}/admin/catalogues/requests`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      "Failed to load catalogue requests.",
+    );
+  }
+
+  return (await response.json()) as AdminCatalogueRequest[];
+}
+
+
 export type PageSeoItem = {
   id: string;
   path: string;
