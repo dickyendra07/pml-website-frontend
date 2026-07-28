@@ -15,9 +15,12 @@ import {
 const navItems = [
   { label: "Dashboard", href: "/admin", icon: "D" },
   { label: "Inquiries", href: "/admin/inquiries", icon: "I" },
+  { label: "Homepage", href: "/admin/homepage-features", icon: "H" },
   { label: "Catalogues", href: "/admin/catalogues", icon: "C" },
   { label: "Insights", href: "/admin/insights", icon: "N" },
   { label: "Careers", href: "/admin/careers", icon: "J" },
+  { label: "Facilities", href: "/admin/facilities", icon: "F" },
+  { label: "Media", href: "/admin/media", icon: "M" },
   { label: "Popups", href: "/admin/popups", icon: "P" },
   { label: "Legal Pages", href: "/admin/legal-pages", icon: "L" },
   { label: "Settings", href: "/admin/settings", icon: "S" },
