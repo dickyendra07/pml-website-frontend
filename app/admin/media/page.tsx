@@ -120,6 +120,8 @@ export default function AdminMediaPage() {
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadQueue, setUploadQueue] = useState<UploadQueueItem[]>([]);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
   const [uploadFolder, setUploadFolder] = useState("general");
   const [search, setSearch] = useState("");
   const [folderFilter, setFolderFilter] = useState("all");
@@ -364,6 +366,67 @@ export default function AdminMediaPage() {
 
     setUploading(false);
   };
+
+
+  const startRename = () => {
+    if (!selectedMedia) return;
+
+    setRenameValue(
+      selectedMedia.originalName || selectedMedia.filename,
+    );
+
+    setIsRenaming(true);
+  };
+
+
+  const cancelRename = () => {
+    setIsRenaming(false);
+    setRenameValue("");
+  };
+
+
+  const saveRename = async () => {
+    if (!selectedMedia) return;
+
+    const token = getAdminToken();
+
+    if (!token) return;
+
+    const name = renameValue.trim();
+
+    if (!name) return;
+
+    setSaving(true);
+
+    try {
+      const updated = await updateAdminMediaAsset(
+        token,
+        selectedMedia.id,
+        {
+          filename: name,
+        },
+      );
+
+      setForm(mapMediaToForm(updated));
+      setMessageTone("success");
+      setMessage("Filename updated successfully.");
+
+      setIsRenaming(false);
+
+      await loadMedia();
+
+    } catch (error) {
+      setMessageTone("error");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to rename media.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
 
   const handleUpload = async (
     event: ChangeEvent<HTMLInputElement>,
@@ -996,6 +1059,68 @@ export default function AdminMediaPage() {
 
               {selectedMedia ? (
                 <>
+
+                  <div className="mb-5 rounded-[24px] border border-black/5 bg-[#f6faf7] p-4">
+
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-black/40">
+                      Filename
+                    </p>
+
+                    {!isRenaming ? (
+                      <div className="mt-3 flex items-center justify-between gap-3">
+
+                        <p className="min-w-0 flex-1 break-all text-sm font-black text-black">
+                          {selectedMedia.originalName || selectedMedia.filename}
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={startRename}
+                          className="shrink-0 rounded-full border border-black/10 px-4 py-2 text-xs font-black transition hover:border-[#039147] hover:text-[#039147]"
+                        >
+                          Rename
+                        </button>
+
+                      </div>
+                    ) : (
+
+                      <div className="mt-3 grid gap-3">
+
+                        <input
+                          value={renameValue}
+                          onChange={(event) =>
+                            setRenameValue(event.target.value)
+                          }
+                          className="h-11 rounded-2xl border border-black/10 bg-white px-4 text-sm font-bold outline-none focus:border-[#039147]"
+                        />
+
+                        <div className="flex gap-2">
+
+                          <button
+                            type="button"
+                            onClick={saveRename}
+                            className="rounded-full bg-[#039147] px-4 py-2 text-xs font-black text-white"
+                          >
+                            Save
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={cancelRename}
+                            className="rounded-full border border-black/10 px-4 py-2 text-xs font-black"
+                          >
+                            Cancel
+                          </button>
+
+                        </div>
+
+                      </div>
+
+                    )}
+
+                  </div>
+
+
                   <div className="mb-5 overflow-hidden rounded-[24px] border border-black/5 bg-[#f6faf7]">
                     {selectedMedia.type === "IMAGE" ? (
                       <div className="relative h-64">

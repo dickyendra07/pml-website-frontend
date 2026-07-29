@@ -828,6 +828,7 @@ export type MediaAssetItem = {
 };
 
 export type MediaAssetPayload = {
+  filename?: string;
   altText?: string | null;
   caption?: string | null;
   folder?: string | null;

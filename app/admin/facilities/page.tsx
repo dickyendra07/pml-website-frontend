@@ -4,6 +4,9 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
 import MediaPicker from "@/components/admin/MediaPicker";
+import FacilityGalleryManager, {
+  FacilityGalleryItem,
+} from "@/components/admin/FacilityGalleryManager";
 import {
   AdminFacilityItem,
   PageSeoStatus,
@@ -26,6 +29,7 @@ type FacilityForm = {
   contentEn: string;
   contentId: string;
   image: string;
+  gallery: FacilityGalleryItem[];
   pointsEn: string;
   pointsId: string;
   category: string;
@@ -45,6 +49,7 @@ const emptyForm: FacilityForm = {
   contentEn: "",
   contentId: "",
   image: "",
+  gallery: [],
   pointsEn: "",
   pointsId: "",
   category: "clinical",
@@ -84,6 +89,9 @@ function mapFacilityToForm(item: AdminFacilityItem): FacilityForm {
     contentEn: item.contentEn || "",
     contentId: item.contentId || "",
     image: item.image || "",
+    gallery: Array.isArray(item.gallery)
+      ? item.gallery
+      : [],
     pointsEn: item.pointsEn?.join("\n") || "",
     pointsId: item.pointsId?.join("\n") || "",
     category: item.category || "clinical",
@@ -236,6 +244,7 @@ export default function AdminFacilitiesPage() {
       contentEn: form.contentEn.trim() || undefined,
       contentId: form.contentId.trim() || undefined,
       image: form.image || undefined,
+      gallery: form.gallery,
       pointsEn: splitLines(form.pointsEn),
       pointsId: splitLines(form.pointsId),
       category: form.category,
@@ -437,6 +446,20 @@ export default function AdminFacilitiesPage() {
                         : "border-black/5 bg-white hover:border-[#039147]/30 hover:bg-[#f6faf7]"
                     }`}
                   >
+                    <div className="mb-4 overflow-hidden rounded-[18px] bg-[#f6faf7]">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.titleEn || item.key}
+                          className="h-36 w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-36 items-center justify-center text-xs font-black uppercase tracking-[0.12em] text-black/25">
+                          No Image
+                        </div>
+                      )}
+                    </div>
+
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="line-clamp-2 text-sm font-black text-black">
@@ -761,6 +784,16 @@ export default function AdminFacilitiesPage() {
                 folder="facilities"
                 title="Facility Featured Image"
                 description="Choose a reusable image from the PML Media Library or upload a new facility image."
+              />
+
+              <FacilityGalleryManager
+                value={form.gallery}
+                onChange={(gallery) =>
+                  setForm((current) => ({
+                    ...current,
+                    gallery,
+                  }))
+                }
               />
 
               <section className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_22px_70px_rgba(0,0,0,0.08)] md:p-7">

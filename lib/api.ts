@@ -231,3 +231,89 @@ export async function getCareers() {
 
   return (await response.json()) as CareerItem[];
 }
+
+
+export type FacilityApiItem = {
+  id: string;
+  key: string;
+  titleEn: string;
+  titleId: string | null;
+  eyebrowEn: string | null;
+  eyebrowId: string | null;
+  summaryEn: string | null;
+  summaryId: string | null;
+  contentEn: string | null;
+  contentId: string | null;
+  image: string | null;
+  gallery: Array<{
+    id: string;
+    image: string;
+    titleEn?: string;
+    titleId?: string;
+    captionEn?: string;
+    captionId?: string;
+    sortOrder?: number;
+  }>;
+  pointsEn: string[];
+  pointsId: string[];
+  category: string;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  sortOrder: number;
+};
+
+export type FacilityFrontendItem = {
+  key:
+    | "clinical-facilities"
+    | "analytical-facilities"
+    | "supporting-facilities"
+    | "vr-gallery";
+  title: string;
+  eyebrow: string;
+  href: string;
+  summary: string;
+  image: string;
+  gallery: string[];
+  points: string[];
+};
+
+export async function getFacilities() {
+  if (!hasApiBaseUrl) {
+    console.log("NO API BASE URL");
+    return [];
+  }
+
+  const response = await fetch(`${API_BASE_URL}/facilities`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load facilities.");
+  }
+
+  const data = (await response.json()) as FacilityApiItem[];
+
+  return data;
+}
+
+export async function getFacilityByKey(key: string) {
+  const facilities = await getFacilities();
+
+  const item = facilities.find(
+    (facility) => facility.key === key,
+  );
+
+  if (!item) {
+    return null;
+  }
+
+  return {
+    key: item.key as FacilityFrontendItem["key"],
+    title: item.titleEn,
+    eyebrow: item.eyebrowEn || "",
+    href: `/facilities/${item.key}`,
+    summary: item.summaryEn || "",
+    image: item.image || "",
+    gallery: item.gallery.map((gallery) => gallery.image),
+    points: item.pointsEn || [],
+  } satisfies FacilityFrontendItem;
+}
