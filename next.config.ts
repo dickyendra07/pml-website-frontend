@@ -18,7 +18,7 @@ const contentSecurityPolicy = [
   "object-src 'none'",
   `script-src ${scriptSources.join(" ")}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
+  "img-src 'self' data: blob: https: http://localhost:4000 http://127.0.0.1:4000",
   "font-src 'self' data:",
   "connect-src 'self' https: http://localhost:4000 http://127.0.0.1:4000 ws: wss:",
   "frame-src 'self' https://vercel.live https://www.google.com https://maps.google.com",

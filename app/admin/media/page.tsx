@@ -1169,6 +1169,7 @@ export default function AdminMediaPage() {
                   </div>
 
                   <div className="mb-5 grid gap-3 rounded-[22px] bg-[#f6faf7] p-4 text-xs">
+
                     <div className="flex justify-between gap-3">
                       <span className="font-bold text-black/40">
                         Type
@@ -1187,6 +1188,28 @@ export default function AdminMediaPage() {
                       </span>
                     </div>
 
+                    {selectedMedia.width && selectedMedia.height ? (
+                      <>
+                        <div className="flex justify-between gap-3">
+                          <span className="font-bold text-black/40">
+                            Dimensions
+                          </span>
+                          <span className="font-black text-black">
+                            {selectedMedia.width} × {selectedMedia.height}px
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between gap-3">
+                          <span className="font-bold text-black/40">
+                            Aspect Ratio
+                          </span>
+                          <span className="font-black text-black">
+                            {(selectedMedia.width / selectedMedia.height).toFixed(2)}:1
+                          </span>
+                        </div>
+                      </>
+                    ) : null}
+
                     <div className="flex justify-between gap-3">
                       <span className="font-bold text-black/40">
                         Folder
@@ -1204,7 +1227,54 @@ export default function AdminMediaPage() {
                         {formatDate(selectedMedia.createdAt)}
                       </span>
                     </div>
+
                   </div>
+
+                  {selectedMedia.variants?.length ? (
+                    <div className="mb-5 rounded-[22px] border border-black/5 bg-white p-4">
+
+                      <p className="mb-3 text-xs font-black uppercase tracking-[0.14em] text-[#039147]">
+                        Generated Variants
+                      </p>
+
+                      <div className="grid gap-3">
+
+                        {selectedMedia.variants.map((variant) => (
+                          <div
+                            key={variant.id}
+                            className="rounded-2xl bg-[#f6faf7] p-3"
+                          >
+
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-black text-black">
+                                  {variant.name}
+                                </p>
+
+                                <p className="mt-1 text-xs font-bold text-black/40">
+                                  {variant.width && variant.height
+                                    ? `${variant.width} × ${variant.height}px`
+                                    : "Generated image"}
+                                </p>
+                              </div>
+
+                              <a
+                                href={getAssetUrl(variant.url)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="rounded-full bg-black px-3 py-1.5 text-[11px] font-black text-white"
+                              >
+                                Open
+                              </a>
+                            </div>
+
+                          </div>
+                        ))}
+
+                      </div>
+
+                    </div>
+                  ) : null}
 
                   <div className="mb-5 flex flex-col gap-3 sm:flex-row">
                     <button

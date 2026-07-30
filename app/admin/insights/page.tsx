@@ -1,5 +1,7 @@
 "use client";
 
+import MediaPicker from "@/components/admin/MediaPicker";
+
 import Image from "next/image";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
@@ -860,55 +862,16 @@ export default function AdminInsightsPage() {
                   </>
                 )}
 
-                <div className="grid gap-4 rounded-[26px] border border-black/5 bg-white5 p-4 md:col-span-2 md:grid-cols-[0.9fr_1.1fr] md:p-5">
-                  <div className="overflow-hidden rounded-[22px] border border-black/5 bg-black/30">
-                    {form.coverImage ? (
-                      <div className="relative h-56 w-full">
-                        <Image
-                          src={getAssetUrl(form.coverImage)}
-                          alt="Insight cover preview"
-                          fill
-                          sizes="(max-width: 768px) 100vw, 420px"
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex h-56 items-center justify-center px-6 text-center text-sm font-bold text-black/50">
-                        Upload cover image to preview insight card.
-                      </div>
-                    )}
-                  </div>
-
-                  <label className="grid gap-2">
-                    <span className="text-sm font-black text-black">
-                      Cover Image
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      onChange={(event) => {
-                        void handleCoverUpload(event.target.files?.[0] || null);
-                        event.target.value = "";
-                      }}
-                      className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm font-bold text-black file:mr-4 file:rounded-full file:border-0 file:bg-[#039147] file:px-4 file:py-2 file:text-xs file:font-black file:text-black"
-                    />
-
-                    <input
-                      value={form.coverImage}
-                      onChange={(event) =>
-                        updateField("coverImage", event.target.value)
-                      }
-                      placeholder="/uploads/insights/covers/image.png"
-                      className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition placeholder:text-black/20 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
-                    />
-
-                    <span className="text-xs font-semibold text-black/50">
-                      {uploadingCover
-                        ? "Uploading cover..."
-                        : "Upload image or paste cover URL manually."}
-                    </span>
-                  </label>
+                <div className="md:col-span-2">
+                  <MediaPicker
+                    value={form.coverImage}
+                    onChange={(url) =>
+                      updateField("coverImage", url)
+                    }
+                    folder="insights"
+                    title="Insight Cover Image"
+                    description="Upload a new cover image or select an existing asset from the PML media library."
+                  />
                 </div>
 
                 <label className="grid gap-2">

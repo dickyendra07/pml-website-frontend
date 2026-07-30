@@ -158,6 +158,28 @@ export async function getInsights(
   return (await response.json()) as InsightItem[];
 }
 
+export async function getInsightBySlug(
+  slug: string,
+  locale: "en" | "id" = "en",
+) {
+  if (!hasApiBaseUrl) {
+    return null;
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/insights/${slug}?locale=${locale}`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return (await response.json()) as InsightItem;
+}
+
 export type HomepageFeature = {
   id: string;
   title: string;

@@ -148,7 +148,10 @@ export default function InsightCard({
         </p>
 
         <Link
-          href={localizeHref(`/insight/${category}`, locale)}
+          href={localizeHref(
+            `/insight/${category}/${item.slug}`,
+            locale,
+          )}
           className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#eaf8f0] px-5 py-3 text-sm font-extrabold text-[#039147] transition group-hover:bg-[#039147] group-hover:text-white"
         >
           {isIndonesian ? "Baca selengkapnya" : "Read more"}

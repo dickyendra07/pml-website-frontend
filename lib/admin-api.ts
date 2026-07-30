@@ -812,17 +812,38 @@ export async function uploadAdminHomepageFeatureImage(
 
 export type MediaAssetType = "IMAGE" | "DOCUMENT" | "VIDEO" | "OTHER";
 
+export type MediaVariantItem = {
+  id: string;
+  name: string;
+  url: string;
+  width: number | null;
+  height: number | null;
+  createdAt: string;
+};
+
 export type MediaAssetItem = {
   id: string;
+
   filename: string;
   originalName: string | null;
+
   mimeType: string | null;
   size: number | null;
+
+  width: number | null;
+  height: number | null;
+
   url: string;
+
   type: MediaAssetType;
+
   altText: string | null;
   caption: string | null;
+
   folder: string | null;
+
+  variants: MediaVariantItem[];
+
   createdAt: string;
   updatedAt: string;
 };
