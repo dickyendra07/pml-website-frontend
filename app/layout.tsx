@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+
 import "./globals.css";
+
 import ClientShell from "@/components/ClientShell";
 import CookieConsent from "@/components/CookieConsent";
 import DocumentLanguage from "@/components/DocumentLanguage";
+import GoogleTagManager from "@/components/analytics/GoogleTagManager";
 import { getSeoDefaults } from "@/lib/server-settings";
 
 const kalbeHelix = localFont({
@@ -92,10 +95,22 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     icons: {
       icon: [
-        { url: "/favicon.ico", sizes: "64x64", type: "image/x-icon" },
-        { url: "/icon.png", type: "image/png" },
+        {
+          url: "/favicon.ico",
+          sizes: "64x64",
+          type: "image/x-icon",
+        },
+        {
+          url: "/icon.png",
+          type: "image/png",
+        },
       ],
-      apple: [{ url: "/apple-icon.png", type: "image/png" }],
+      apple: [
+        {
+          url: "/apple-icon.png",
+          type: "image/png",
+        },
+      ],
     },
     robots: {
       index: true,
@@ -119,8 +134,26 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${kalbeHelix.className} ${kalbeHelix.variable}`}>
+        <GoogleTagManager />
+
+        <noscript>
+          <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-MNT2NKMQ"
+            height="0"
+            width="0"
+            style={{
+              display: "none",
+              visibility: "hidden",
+            }}
+          />
+        </noscript>
+
         <DocumentLanguage />
-        <ClientShell>{children}</ClientShell>
+
+        <ClientShell>
+          {children}
+        </ClientShell>
+
         <CookieConsent />
       </body>
     </html>

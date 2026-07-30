@@ -7,6 +7,7 @@ const scriptSources = [
   "'unsafe-inline'",
   ...(isProduction ? [] : ["'unsafe-eval'"]),
   "https://vercel.live",
+  "https://www.googletagmanager.com",
 ];
 
 const contentSecurityPolicy = [
