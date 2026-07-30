@@ -44,10 +44,6 @@ const kalbeHelix = localFont({
 export async function generateMetadata(): Promise<Metadata> {
   const seo = await getSeoDefaults();
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-  const isProductionSite =
-    siteUrl === "https://pharmametriclabs.com";
-
   return {
     metadataBase: new URL("https://pharmametriclabs.com"),
     title: {
@@ -117,11 +113,11 @@ export async function generateMetadata(): Promise<Metadata> {
       ],
     },
     robots: {
-      index: isProductionSite,
-      follow: isProductionSite,
+      index: true,
+      follow: true,
       googleBot: {
-        index: isProductionSite,
-        follow: isProductionSite,
+        index: true,
+        follow: true,
         "max-image-preview": "large",
         "max-snippet": -1,
         "max-video-preview": -1,

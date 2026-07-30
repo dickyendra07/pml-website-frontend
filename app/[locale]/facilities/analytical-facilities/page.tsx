@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import FacilityDetailTemplate from "@/components/pages/FacilityDetailTemplate";
-import { getFacilityByKey } from "@/data/facilities";
+import { getFacilityByKey } from "@/lib/api";
 import { isLocale, type Locale } from "@/i18n/config";
 import { generatePageMetadata } from "@/lib/page-seo";
 
@@ -31,8 +31,8 @@ export async function generateMetadata({
   });
 }
 
-export default function AnalyticalFacilitiesPage() {
-  const data = getFacilityByKey("analytical-facilities");
+export default async function AnalyticalFacilitiesPage() {
+  const data = await getFacilityByKey("analytical-facilities");
 
   if (!data) {
     notFound();
