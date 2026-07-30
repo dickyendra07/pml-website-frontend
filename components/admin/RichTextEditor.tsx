@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import MediaLibraryModal from "@/components/admin/MediaLibraryModal";
 
 type RichTextEditorProps = {
   value: string;
@@ -48,6 +50,8 @@ function ToolbarGroup({ children }: { children: React.ReactNode }) {
 }
 
 export default function RichTextEditor({ value, onChange }: RichTextEditorProps) {
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -55,6 +59,10 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
         heading: {
           levels: [1, 2, 3],
         },
+      }),
+      Image.configure({
+        inline: false,
+        allowBase64: false,
       }),
       Underline,
       Placeholder.configure({
@@ -262,6 +270,13 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
               >
                 Remove Link
               </ToolbarButton>
+
+              <ToolbarButton
+                onClick={() => setImagePickerOpen(true)}
+                title="Insert image"
+              >
+                Insert Image
+              </ToolbarButton>
             </ToolbarGroup>
 
             <ToolbarGroup>
@@ -278,6 +293,23 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
       </div>
 
       <EditorContent editor={editor} />
+
+      {imagePickerOpen ? (
+        <MediaLibraryModal
+          onClose={() => setImagePickerOpen(false)}
+          onSelect={(url) => {
+            editor
+              .chain()
+              .focus()
+              .setImage({
+                src: url,
+              })
+              .run();
+
+            setImagePickerOpen(false);
+          }}
+        />
+      ) : null}
 
       <div className="border-t border-black/5 bg-white px-5 py-4 text-xs font-bold leading-6 text-black/45">
         Tips: untuk internal link SEO, highlight kata tertentu seperti “bioequivalence study”
