@@ -13,6 +13,7 @@ import {
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
 import MediaVariantPreviewModal from "@/components/admin/MediaVariantPreviewModal";
+import { getMediaVariantInfo } from "@/lib/media-variant-config";
 import MediaCropModal from "@/components/admin/MediaCropModal";
 import {
   MediaAssetItem,
@@ -1304,52 +1305,120 @@ export default function AdminMediaPage() {
 
                   </div>
 
+
                   {selectedMedia.variants?.length ? (
                     <div className="mb-5 rounded-[22px] border border-black/5 bg-white p-4">
 
-                      <p className="mb-3 text-xs font-black uppercase tracking-[0.14em] text-[#039147]">
+                      <p className="mb-4 text-xs font-black uppercase tracking-[0.14em] text-[#039147]">
                         Generated Variants
                       </p>
 
-                      <div className="grid gap-3">
 
-                        {selectedMedia.variants.map((variant) => (
-                          <div
-                            key={variant.id}
-                            className="rounded-2xl bg-[#f6faf7] p-3"
-                          >
+                      <div className="grid gap-4">
 
-                            <div className="flex items-center justify-between gap-3">
-                              <div>
-                                <p className="text-sm font-black text-black">
-                                  {variant.name}
-                                </p>
+                        {selectedMedia.variants.map((variant) => {
 
-                                <p className="mt-1 text-xs font-bold text-black/40">
-                                  {variant.width && variant.height
-                                    ? `${variant.width} × ${variant.height}px`
-                                    : "Generated image"}
-                                </p>
+                          const variantInfo =
+                            getMediaVariantInfo(
+                              variant.name,
+                            );
+
+
+                          return (
+                            <div
+                              key={variant.id}
+                              className="rounded-[24px] bg-[#f6faf7] p-4"
+                            >
+
+                              <div className="flex flex-col gap-4">
+
+
+                                <div>
+
+                                  <div className="flex items-center justify-between gap-3">
+
+                                    <div>
+
+                                      <p className="text-sm font-black text-black">
+                                        {variantInfo.title}
+                                      </p>
+
+
+                                      <p className="mt-1 text-xs font-bold text-black/40">
+                                        {variant.width && variant.height
+                                          ? `${variant.width} × ${variant.height}px`
+                                          : "Generated image"}
+                                      </p>
+
+                                    </div>
+
+
+                                    <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-black/40">
+                                      {variant.name}
+                                    </span>
+
+                                  </div>
+
+
+                                  <p className="mt-3 text-xs leading-5 text-black/50">
+                                    {variantInfo.description}
+                                  </p>
+
+
+                                  <div className="mt-4 rounded-2xl bg-white p-3">
+
+                                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#039147]">
+                                      Recommended Usage
+                                    </p>
+
+
+                                    <div className="mt-2 flex flex-wrap gap-2">
+
+                                      {variantInfo.recommendedFor.map(
+                                        (item) => (
+                                          <span
+                                            key={item}
+                                            className="rounded-full bg-[#f6faf7] px-3 py-1 text-[11px] font-bold text-black/60"
+                                          >
+                                            {item}
+                                          </span>
+                                        ),
+                                      )}
+
+                                    </div>
+
+                                  </div>
+
+                                </div>
+
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setVariantPreview({
+                                      url: getAssetUrl(
+                                        variant.url,
+                                      ),
+                                      name:
+                                        variantInfo.title,
+                                      width:
+                                        variant.width,
+                                      height:
+                                        variant.height,
+                                    })
+                                  }
+                                  className="w-full rounded-full bg-black px-4 py-2.5 text-xs font-black text-white transition hover:-translate-y-0.5"
+                                >
+                                  Preview Variant
+                                </button>
+
+
                               </div>
 
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setVariantPreview({
-                                    url: getAssetUrl(variant.url),
-                                    name: variant.name,
-                                    width: variant.width,
-                                    height: variant.height,
-                                  })
-                                }
-                                className="rounded-full bg-black px-4 py-2 text-[11px] font-black text-white transition hover:-translate-y-0.5"
-                              >
-                                Preview
-                              </button>
                             </div>
+                          );
 
-                          </div>
-                        ))}
+                        })}
 
                       </div>
 
