@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { resolveMediaUrl } from "@/lib/media";
 
 type PopupLayout = "IMAGE_LEFT" | "IMAGE_RIGHT" | "IMAGE_TOP" | "TEXT_ONLY";
 
@@ -39,20 +40,6 @@ function getStorageKey(popupId: string) {
 function getTodayStorageKey(popupId: string) {
   const today = new Date().toISOString().slice(0, 10);
   return `pml_popup_closed_${popupId}_${today}`;
-}
-
-function getAssetUrl(value: string | null) {
-  if (!value) return "";
-
-  if (value.startsWith("http")) {
-    return value;
-  }
-
-  if (value.startsWith("/uploads")) {
-    return `${API_ORIGIN}${value}`;
-  }
-
-  return value;
 }
 
 function shouldHidePopup(popup: PopupItem) {
@@ -90,7 +77,7 @@ export default function HomepagePopup() {
   const [isVisible, setIsVisible] = useState(false);
 
   const layout = popup?.layout || "IMAGE_LEFT";
-  const imageUrl = getAssetUrl(popup?.imageUrl || null);
+  const imageUrl = resolveMediaUrl(popup?.imageUrl);
   const hasImage = Boolean(imageUrl) && layout !== "TEXT_ONLY";
 
   const shellClassName = useMemo(() => {

@@ -1,14 +1,17 @@
 import type { NextConfig } from "next";
 
 const isProduction = process.env.NODE_ENV === "production";
-const mediaBaseUrl =
-  process.env.NEXT_PUBLIC_MEDIA_URL ||
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-  (isProduction ? "" : "http://localhost:4000");
+const mediaOrigins = [
+  process.env.NEXT_PUBLIC_MEDIA_URL,
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, ""),
+  ...(isProduction ? [] : ["http://localhost:4000"]),
+]
+  .filter((value): value is string => Boolean(value))
+  .map((value) => new URL(value).origin);
 
-const remoteImagePatterns = mediaBaseUrl
-  ? [new URL("/uploads/**", mediaBaseUrl)]
-  : [];
+const remoteImagePatterns = [...new Set(mediaOrigins)].map(
+  (origin) => new URL("/uploads/**", origin),
+);
 
 const scriptSources = [
   "'self'",

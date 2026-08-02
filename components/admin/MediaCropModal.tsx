@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Cropper, { Area } from "react-easy-crop";
+import { resolveMediaUrl } from "@/lib/media";
 
 type RatioOption = {
   label: string;
@@ -88,7 +89,7 @@ export default function MediaCropModal({
 
           <div className="relative h-[520px] overflow-hidden rounded-3xl bg-black">
             <Cropper
-              image={imageUrl}
+              image={resolveMediaUrl(imageUrl)}
               crop={crop}
               zoom={zoom}
               aspect={selectedRatio.ratio}

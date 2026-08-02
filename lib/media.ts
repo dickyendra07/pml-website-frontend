@@ -2,7 +2,9 @@ const MEDIA_BASE_URL =
   (
     process.env.NEXT_PUBLIC_MEDIA_URL ||
     process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-    "http://localhost:4000"
+    (process.env.NODE_ENV === "development"
+      ? "http://localhost:4000"
+      : "")
   ).replace(/\/$/, "");
 
 export function resolveMediaUrl(
@@ -18,7 +20,9 @@ export function resolveMediaUrl(
   }
 
   if (value.startsWith("/uploads")) {
-    return `${MEDIA_BASE_URL}${value}`;
+    return MEDIA_BASE_URL
+      ? `${MEDIA_BASE_URL}${value}`
+      : value;
   }
 
   return value;

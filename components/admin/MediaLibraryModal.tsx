@@ -8,32 +8,12 @@ import {
   getAdminMediaAssets,
   getAdminToken,
 } from "@/lib/admin-api";
+import { resolveMediaUrl } from "@/lib/media";
 
 type Props = {
   onSelect: (url: string) => void;
   onClose: () => void;
 };
-
-function getAssetUrl(value: string) {
-  if (!value) return "";
-
-  if (
-    value.startsWith("http://") ||
-    value.startsWith("https://")
-  ) {
-    return value;
-  }
-
-  if (value.startsWith("/uploads")) {
-    const apiOrigin =
-      process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-      "http://localhost:4000";
-
-    return `${apiOrigin}${value}`;
-  }
-
-  return value;
-}
 
 export default function MediaLibraryModal({
   onSelect,
@@ -94,7 +74,7 @@ export default function MediaLibraryModal({
 
                 <div className="relative h-36">
                   <Image
-                    src={getAssetUrl(item.url)}
+                    src={resolveMediaUrl(item.url)}
                     alt={item.altText || item.filename}
                     fill
                     className="object-cover"
@@ -128,7 +108,7 @@ export default function MediaLibraryModal({
               <div className="relative mt-5 h-72 overflow-hidden rounded-3xl bg-white">
 
                 <Image
-                  src={getAssetUrl(selected.url)}
+                  src={resolveMediaUrl(selected.url)}
                   alt="Preview"
                   fill
                   className="object-cover"
@@ -141,11 +121,7 @@ export default function MediaLibraryModal({
               <button
                 type="button"
                 onClick={() => {
-                  onSelect(
-                    selected.url.startsWith("http")
-                      ? selected.url
-                      : `http://localhost:4000${selected.url}`
-                  );
+                  onSelect(resolveMediaUrl(selected.url));
                   onClose();
                 }}
                 className="mt-6 w-full rounded-full bg-[#039147] px-6 py-3 text-sm font-black text-white"

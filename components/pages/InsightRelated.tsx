@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import type { InsightItem } from "@/lib/api";
+import { resolveMediaUrl } from "@/lib/media";
 
 type InsightRelatedProps = {
   items: InsightItem[];
@@ -65,7 +66,7 @@ export default function InsightRelated({
 
                 <Image
                   src={
-                    item.coverImage ||
+                    resolveMediaUrl(item.coverImage) ||
                     "/images/pml/cta-lab-background.png"
                   }
                   alt={item.title}

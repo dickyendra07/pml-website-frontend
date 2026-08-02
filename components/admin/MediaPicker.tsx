@@ -16,6 +16,7 @@ import {
   getAdminToken,
   uploadAdminMediaAsset,
 } from "@/lib/admin-api";
+import { resolveMediaUrl as getAssetUrl } from "@/lib/media";
 
 type MediaPickerProps = {
   value: string;
@@ -37,30 +38,6 @@ const variantOptions: VariantName[] = [
   "card",
   "thumbnail",
 ];
-
-function getAssetUrl(value: string) {
-  if (!value) return "";
-
-  if (
-    value.startsWith("http://") ||
-    value.startsWith("https://") ||
-    value.startsWith("data:")
-  ) {
-    return value;
-  }
-
-  if (value.startsWith("/uploads")) {
-    const apiOrigin =
-      process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-      (process.env.NODE_ENV === "development"
-        ? "http://localhost:4000"
-        : "");
-
-    return `${apiOrigin}${value}`;
-  }
-
-  return value;
-}
 
 function getVariantUrl(
   item: MediaAssetItem,

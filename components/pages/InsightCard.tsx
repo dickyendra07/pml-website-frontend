@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { InsightItem as StaticInsightItem } from "@/data/insights";
 import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
 import { InsightItem as ApiInsightItem } from "@/lib/api";
+import { resolveMediaUrl } from "@/lib/media";
 
 type InsightCardItem = StaticInsightItem | ApiInsightItem;
 
@@ -27,26 +28,13 @@ const categoryLabelId: Record<string, string> = {
   faq: "FAQ",
 };
 
-function getAssetUrl(value: string | null | undefined) {
-  if (!value) return "/images/pml/cta-lab-background.png";
-
-  if (value.startsWith("http")) return value;
-
-  if (value.startsWith("/uploads")) {
-    const apiOrigin =
-      process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-      (process.env.NODE_ENV === "development" ? "http://localhost:4000" : "");
-
-    return `${apiOrigin}${value}`;
-  }
-
-  return value;
-}
-
 function getImage(item: InsightCardItem) {
   if ("image" in item) return item.image;
 
-  return getAssetUrl(item.coverImage);
+  return (
+    resolveMediaUrl(item.coverImage) ||
+    "/images/pml/cta-lab-background.png"
+  );
 }
 
 function getExcerpt(item: InsightCardItem) {

@@ -16,6 +16,7 @@ import {
   uploadAdminCatalogueCover,
   uploadAdminCatalogueFile,
 } from "@/lib/admin-api";
+import { resolveMediaUrl as getAssetUrl } from "@/lib/media";
 
 type CatalogueForm = {
   id: string;
@@ -64,22 +65,6 @@ function mapCatalogueToForm(item: AdminCatalogueItem): CatalogueForm {
     status: item.status,
     sortOrder: String(item.sortOrder || 0),
   };
-}
-
-function getAssetUrl(value: string) {
-  if (!value) return "";
-
-  if (value.startsWith("http")) return value;
-
-  if (value.startsWith("/uploads")) {
-    const apiOrigin =
-      process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-      (process.env.NODE_ENV === "development" ? "http://localhost:4000" : "");
-
-    return `${apiOrigin}${value}`;
-  }
-
-  return value;
 }
 
 export default function AdminCataloguesPage() {

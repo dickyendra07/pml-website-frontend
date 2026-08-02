@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { resolveMediaUrl } from "@/lib/media";
 
 type Props = {
   open: boolean;
@@ -123,7 +124,7 @@ export default function MediaVariantPreviewModal({
         <div className="relative h-[50vh] min-h-[300px] overflow-hidden rounded-[24px] bg-black/5">
 
           <Image
-            src={url}
+            src={resolveMediaUrl(url)}
             alt={name}
             fill
             className="object-contain"

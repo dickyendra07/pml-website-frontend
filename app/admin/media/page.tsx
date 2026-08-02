@@ -14,6 +14,7 @@ import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
 import MediaVariantPreviewModal from "@/components/admin/MediaVariantPreviewModal";
 import { getMediaVariantInfo } from "@/lib/media-variant-config";
+import { resolveMediaUrl as getAssetUrl } from "@/lib/media";
 import MediaCropModal from "@/components/admin/MediaCropModal";
 import {
   MediaAssetItem,
@@ -76,30 +77,6 @@ function formatDate(value?: string | null) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
-}
-
-function getAssetUrl(value: string) {
-  if (!value) return "";
-
-  if (
-    value.startsWith("http://") ||
-    value.startsWith("https://") ||
-    value.startsWith("data:")
-  ) {
-    return value;
-  }
-
-  if (value.startsWith("/uploads")) {
-    const apiOrigin =
-      process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-      (process.env.NODE_ENV === "development"
-        ? "http://localhost:4000"
-        : "");
-
-    return `${apiOrigin}${value}`;
-  }
-
-  return value;
 }
 
 function mapMediaToForm(item: MediaAssetItem): MediaForm {

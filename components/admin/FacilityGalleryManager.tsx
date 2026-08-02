@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MediaPicker from "@/components/admin/MediaPicker";
+import { resolveMediaUrl } from "@/lib/media";
 
 export type FacilityGalleryItem = {
   id: string;
@@ -120,7 +121,7 @@ export default function FacilityGalleryManager({
               <div className="relative aspect-[4/3] overflow-hidden bg-[#f3f7f4]">
                 {item.image ? (
                   <img
-                    src={item.image}
+                    src={resolveMediaUrl(item.image)}
                     alt=""
                     className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                   />

@@ -125,22 +125,6 @@ function mapInsightToForm(item: AdminInsightItem): InsightForm {
   };
 }
 
-function getAssetUrl(value: string) {
-  if (!value) return "";
-
-  if (value.startsWith("http")) return value;
-
-  if (value.startsWith("/uploads")) {
-    const apiOrigin =
-      process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-      (process.env.NODE_ENV === "development" ? "http://localhost:4000" : "");
-
-    return `${apiOrigin}${value}`;
-  }
-
-  return value;
-}
-
 function parseTags(value: string) {
   return value
     .split(",")

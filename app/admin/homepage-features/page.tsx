@@ -14,6 +14,7 @@ import {
   updateAdminHomepageFeature,
   uploadAdminHomepageFeatureImage,
 } from "@/lib/admin-api";
+import { resolveMediaUrl as getAssetUrl } from "@/lib/media";
 
 type HomepageFeatureForm = {
   id: string;
@@ -48,22 +49,6 @@ const featureTypes = [
   { label: "Homepage Campaign", value: "homepage_campaign" },
   { label: "Featured Service", value: "featured_service" },
 ];
-
-function getAssetUrl(value: string) {
-  if (!value) return "";
-
-  if (value.startsWith("http")) return value;
-
-  if (value.startsWith("/uploads")) {
-    const apiOrigin =
-      process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-      (process.env.NODE_ENV === "development" ? "http://localhost:4000" : "");
-
-    return `${apiOrigin}${value}`;
-  }
-
-  return value;
-}
 
 function mapFeatureToForm(item: HomepageFeatureItem): HomepageFeatureForm {
   return {

@@ -15,6 +15,7 @@ import {
   updateAdminPopup,
   uploadAdminPopupImage,
 } from "@/lib/admin-api";
+import { resolveMediaUrl as getAssetUrl } from "@/lib/media";
 
 type PopupForm = {
   id: string;
@@ -114,24 +115,6 @@ function toIsoOrNull(value: string) {
   if (Number.isNaN(date.getTime())) return null;
 
   return date.toISOString();
-}
-
-function getAssetUrl(value: string) {
-  if (!value) return "";
-
-  if (value.startsWith("http")) {
-    return value;
-  }
-
-  if (value.startsWith("/uploads")) {
-    const apiBaseUrl =
-      process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-      (process.env.NODE_ENV === "development" ? "http://localhost:4000" : "");
-
-    return `${apiBaseUrl}${value}`;
-  }
-
-  return value;
 }
 
 export default function AdminPopupsPage() {

@@ -7,6 +7,7 @@ import { getInsightBySlug } from "@/lib/api";
 import { isLocale, type Locale } from "@/i18n/config";
 import { generatePageMetadata } from "@/lib/page-seo";
 import InsightSidebar from "@/components/pages/InsightSidebar";
+import { resolveMediaUrl } from "@/lib/media";
 
 type Props = {
   params: Promise<{
@@ -84,7 +85,7 @@ export default async function InsightDetailPage({
 
           <Image
             src={
-              data.coverImage ||
+              resolveMediaUrl(data.coverImage) ||
               "/images/pml/cta-lab-background.png"
             }
             alt={data.title}

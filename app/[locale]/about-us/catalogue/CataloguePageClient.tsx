@@ -10,22 +10,7 @@ import {
   submitCatalogueRequest,
 } from "@/lib/api";
 import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
-
-function getAssetUrl(value: string | null) {
-  if (!value) return "/images/pml/cta-lab-background.png";
-
-  if (value.startsWith("http")) return value;
-
-  if (value.startsWith("/uploads")) {
-    const apiOrigin =
-      process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-      (process.env.NODE_ENV === "development" ? "http://localhost:4000" : "");
-
-    return `${apiOrigin}${value}`;
-  }
-
-  return value;
-}
+import { resolveMediaUrl } from "@/lib/media";
 
 function getCatalogueMessage(catalogue: CatalogueItem, isIndonesian: boolean) {
   return isIndonesian
@@ -270,7 +255,10 @@ export default function CataloguePage() {
               >
                 <div className="relative h-48 overflow-hidden bg-black md:h-56">
                   <Image
-                    src={getAssetUrl(catalogue.coverImage)}
+                    src={
+                      resolveMediaUrl(catalogue.coverImage) ||
+                      "/images/pml/cta-lab-background.png"
+                    }
                     alt={catalogue.title}
                     unoptimized={Boolean(
                       catalogue.coverImage?.startsWith("/uploads"),
@@ -297,7 +285,7 @@ export default function CataloguePage() {
                     {catalogue.downloadMode === "PUBLIC_DOWNLOAD" &&
                     catalogue.fileUrl ? (
                       <a
-                        href={getAssetUrl(catalogue.fileUrl)}
+                        href={resolveMediaUrl(catalogue.fileUrl)}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center justify-center rounded-full bg-[#039147] px-6 py-3.5 text-sm font-extrabold text-white shadow-[0_16px_34px_rgba(3,145,71,0.20)] transition hover:-translate-y-0.5"

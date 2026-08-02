@@ -4,22 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HomepageFeature, getHomepageFeatures } from "@/lib/api";
-
-function getAssetUrl(value: string | null) {
-  if (!value) return "/images/pml/cta-lab-background.png";
-
-  if (value.startsWith("http")) return value;
-
-  if (value.startsWith("/uploads")) {
-    const apiOrigin =
-      process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-      (process.env.NODE_ENV === "development" ? "http://localhost:4000" : "");
-
-    return `${apiOrigin}${value}`;
-  }
-
-  return value;
-}
+import { resolveMediaUrl } from "@/lib/media";
 
 export default function HomepageFeatures() {
   const [items, setItems] = useState<HomepageFeature[]>([]);
@@ -80,7 +65,10 @@ export default function HomepageFeatures() {
             >
               <div className="relative h-48 overflow-hidden bg-black md:h-56">
                 <Image
-                  src={getAssetUrl(item.imageUrl)}
+                  src={
+                    resolveMediaUrl(item.imageUrl) ||
+                    "/images/pml/cta-lab-background.png"
+                  }
                   alt={item.title}
                   fill
                   unoptimized={Boolean(item.imageUrl?.startsWith("/uploads"))}

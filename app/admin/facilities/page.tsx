@@ -16,6 +16,7 @@ import {
   getAdminToken,
   updateAdminFacility,
 } from "@/lib/admin-api";
+import { resolveMediaUrl } from "@/lib/media";
 
 type FacilityForm = {
   id: string;
@@ -449,7 +450,7 @@ export default function AdminFacilitiesPage() {
                     <div className="mb-4 overflow-hidden rounded-[18px] bg-[#f6faf7]">
                       {item.image ? (
                         <img
-                          src={item.image}
+                          src={resolveMediaUrl(item.image)}
                           alt={item.titleEn || item.key}
                           className="h-36 w-full object-cover"
                         />
