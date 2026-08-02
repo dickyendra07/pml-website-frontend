@@ -1,3 +1,5 @@
+import type { MediaReference } from "@/lib/media";
+
 export type AdminUser = {
   id: string;
   name: string;
@@ -262,6 +264,7 @@ export type PageSeoItem = {
   ogTitle: string | null;
   ogDescription: string | null;
   ogImage: string | null;
+  ogImageReference: MediaReference | null;
   canonicalUrl: string | null;
   status: PageSeoStatus;
   createdAt: string;
@@ -291,6 +294,7 @@ export async function updateAdminPageSeo(
       | "ogTitle"
       | "ogDescription"
       | "ogImage"
+      | "ogImageReference"
       | "canonicalUrl"
       | "status"
     >
@@ -331,6 +335,7 @@ export type PopupItem = {
   buttonLabel: string | null;
   buttonUrl: string | null;
   imageUrl: string | null;
+  imageReference: MediaReference | null;
   type: PopupType;
   status: PageSeoStatus;
   placementPages: string[];
@@ -349,6 +354,7 @@ export type PopupPayload = {
   buttonLabel?: string | null;
   buttonUrl?: string | null;
   imageUrl?: string | null;
+  imageReference?: MediaReference | null;
   type?: PopupType;
   status?: PageSeoStatus;
   placementPages?: string[];
@@ -442,6 +448,7 @@ export type AdminCatalogueItem = {
   serviceType: string | null;
   fileUrl: string | null;
   coverImage: string | null;
+  coverReference: MediaReference | null;
   downloadMode: CatalogueDownloadMode;
   status: PageSeoStatus;
   sortOrder: number;
@@ -459,6 +466,7 @@ export type AdminCataloguePayload = {
   serviceType?: string | null;
   fileUrl?: string | null;
   coverImage?: string | null;
+  coverReference?: MediaReference | null;
   downloadMode?: CatalogueDownloadMode;
   status?: PageSeoStatus;
   sortOrder?: number;
@@ -588,6 +596,7 @@ export type AdminInsightItem = {
 
   category: string;
   coverImage: string | null;
+  coverReference: MediaReference | null;
   status: PageSeoStatus;
   isFeatured: boolean;
   publishedAt: string | null;
@@ -614,6 +623,7 @@ export type AdminInsightPayload = {
 
   category: string;
   coverImage?: string | null;
+  coverReference?: MediaReference | null;
   status?: PageSeoStatus;
   isFeatured?: boolean;
   publishedAt?: string | null;
@@ -702,6 +712,7 @@ export type HomepageFeatureItem = {
   type: string;
   referenceId: string | null;
   imageUrl: string | null;
+  imageReference: MediaReference | null;
   buttonLabel: string | null;
   buttonUrl: string | null;
   status: PageSeoStatus;
@@ -716,6 +727,7 @@ export type HomepageFeaturePayload = {
   type?: string;
   referenceId?: string | null;
   imageUrl?: string | null;
+  imageReference?: MediaReference | null;
   buttonLabel?: string | null;
   buttonUrl?: string | null;
   status?: PageSeoStatus;
@@ -890,6 +902,8 @@ export type CropMediaPayload = {
   height: number;
   x?: number;
   y?: number;
+  cropWidth?: number;
+  cropHeight?: number;
 };
 
 
@@ -907,7 +921,7 @@ export async function cropAdminMediaAsset(
     body: JSON.stringify(payload),
   });
 
-  return parseJsonResponse(response);
+  return parseJsonResponse<MediaVariantItem>(response);
 }
 
 

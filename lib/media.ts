@@ -17,6 +17,40 @@ export type MediaSource =
   | null
   | undefined;
 
+export type MediaVariantName =
+  | "original"
+  | "hero"
+  | "card"
+  | "thumbnail"
+  | "16-9"
+  | "4-3"
+  | "1-1"
+  | "3-4";
+
+export type MediaReference = {
+  mediaId: string | null;
+  url: string;
+  variant: MediaVariantName;
+};
+
+export function createMediaReference(
+  value: MediaSource,
+  options?: {
+    mediaId?: string | null;
+    variant?: MediaVariantName;
+  },
+): MediaReference | null {
+  const url = getMediaPath(value);
+
+  if (!url) return null;
+
+  return {
+    mediaId: options?.mediaId || null,
+    url,
+    variant: options?.variant || "original",
+  };
+}
+
 function getMediaPath(
   value: MediaSource,
   visited = new Set<object>(),

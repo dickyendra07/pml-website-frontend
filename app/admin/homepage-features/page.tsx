@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
+import MediaPicker from "@/components/admin/MediaPicker";
 import {
   HomepageFeatureItem,
   PageSeoStatus,
@@ -12,9 +12,8 @@ import {
   getAdminHomepageFeatures,
   getAdminToken,
   updateAdminHomepageFeature,
-  uploadAdminHomepageFeatureImage,
 } from "@/lib/admin-api";
-import { resolveMediaUrl as getAssetUrl } from "@/lib/media";
+import { MediaReference, createMediaReference } from "@/lib/media";
 
 type HomepageFeatureForm = {
   id: string;
@@ -23,6 +22,7 @@ type HomepageFeatureForm = {
   type: string;
   referenceId: string;
   imageUrl: string;
+  imageMedia: MediaReference | null;
   buttonLabel: string;
   buttonUrl: string;
   status: PageSeoStatus;
@@ -36,6 +36,7 @@ const emptyForm: HomepageFeatureForm = {
   type: "homepage_highlight",
   referenceId: "",
   imageUrl: "",
+  imageMedia: null,
   buttonLabel: "",
   buttonUrl: "",
   status: "DRAFT",
@@ -58,6 +59,7 @@ function mapFeatureToForm(item: HomepageFeatureItem): HomepageFeatureForm {
     type: item.type || "homepage_highlight",
     referenceId: item.referenceId || "",
     imageUrl: item.imageUrl || "",
+    imageMedia: item.imageReference || createMediaReference(item.imageUrl),
     buttonLabel: item.buttonLabel || "",
     buttonUrl: item.buttonUrl || "",
     status: item.status,
@@ -70,7 +72,6 @@ export default function AdminHomepageFeaturesPage() {
   const [form, setForm] = useState<HomepageFeatureForm>(emptyForm);
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [message, setMessage] = useState("");
 
   const selectedFeature = useMemo(() => {
@@ -131,30 +132,6 @@ export default function AdminHomepageFeaturesPage() {
     setMessage("");
   };
 
-  const handleImageUpload = async (file: File | null) => {
-    if (!file) return;
-
-    const token = getAdminToken();
-
-    if (!token) {
-      setMessage("Admin token not found. Please login again.");
-      return;
-    }
-
-    setUploadingImage(true);
-    setMessage("");
-
-    try {
-      const result = await uploadAdminHomepageFeatureImage(token, file);
-      updateField("imageUrl", result.url);
-      setMessage("Image uploaded successfully.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Failed to upload image.");
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
   const handleArchive = async () => {
     if (!form.id) {
       setMessage("Please select a homepage feature first.");
@@ -201,7 +178,8 @@ export default function AdminHomepageFeaturesPage() {
       description: form.description || null,
       type: form.type,
       referenceId: form.referenceId || null,
-      imageUrl: form.imageUrl || null,
+      imageUrl: form.imageMedia?.url || form.imageUrl || null,
+      imageReference: form.imageMedia,
       buttonLabel: form.buttonLabel || null,
       buttonUrl: form.buttonUrl || null,
       status: form.status,
@@ -389,49 +367,22 @@ export default function AdminHomepageFeaturesPage() {
                 />
               </label>
 
-              <div className="grid gap-4 rounded-[26px] border border-black/5 bg-white5 p-4 md:col-span-2 md:grid-cols-[0.9fr_1.1fr] md:p-5">
-                <div className="overflow-hidden rounded-[22px] border border-black/5 bg-black/30">
-                  {form.imageUrl ? (
-                    <div className="relative h-56 w-full">
-                      <Image
-                        src={getAssetUrl(form.imageUrl)}
-                        alt="Homepage feature preview"
-                        fill
-                        sizes="(max-width: 768px) 100vw, 420px"
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-56 items-center justify-center px-6 text-center text-sm font-bold text-black/50">
-                      Upload image to preview homepage feature.
-                    </div>
-                  )}
-                </div>
-
-                <label className="grid gap-2">
-                  <span className="text-sm font-black text-black">Image</span>
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    onChange={(event) => {
-                      void handleImageUpload(event.target.files?.[0] || null);
-                      event.target.value = "";
-                    }}
-                    className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm font-bold text-black file:mr-4 file:rounded-full file:border-0 file:bg-[#039147] file:px-4 file:py-2 file:text-xs file:font-black file:text-black"
-                  />
-
-                  <input
-                    value={form.imageUrl}
-                    onChange={(event) => updateField("imageUrl", event.target.value)}
-                    placeholder="/uploads/homepage-features/image.png"
-                    className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition placeholder:text-black/20 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
-                  />
-
-                  <span className="text-xs font-semibold text-black/50">
-                    {uploadingImage ? "Uploading image..." : "Upload image or paste image URL manually."}
-                  </span>
-                </label>
+              <div className="md:col-span-2">
+                <MediaPicker
+                  value={form.imageUrl}
+                  onChange={(url) => updateField("imageUrl", url)}
+                  onReferenceChange={(reference) =>
+                    setForm((current) => ({
+                      ...current,
+                      imageUrl: reference?.url || "",
+                      imageMedia: reference,
+                    }))
+                  }
+                  folder="homepage"
+                  title="Homepage Feature Image"
+                  description="Select a reusable image for homepage highlights, campaigns, and featured content cards."
+                  defaultVariant="card"
+                />
               </div>
 
               <label className="grid gap-2">
@@ -498,7 +449,7 @@ export default function AdminHomepageFeaturesPage() {
 
               <button
                 type="submit"
-                disabled={saving || uploadingImage}
+                disabled={saving}
                 className="rounded-full bg-[#039147] px-8 py-4 text-sm font-black text-black shadow-[0_18px_50px_rgba(3,145,71,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving ? "Saving Feature..." : "Save Feature"}

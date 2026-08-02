@@ -2,7 +2,6 @@
 
 import MediaPicker from "@/components/admin/MediaPicker";
 
-import Image from "next/image";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
@@ -15,8 +14,8 @@ import {
   getAdminInsights,
   getAdminToken,
   updateAdminInsight,
-  uploadAdminInsightCover,
 } from "@/lib/admin-api";
+import { MediaReference, createMediaReference } from "@/lib/media";
 
 type InsightForm = {
   id: string;
@@ -39,6 +38,7 @@ type InsightForm = {
 
   category: string;
   coverImage: string;
+  coverMedia: MediaReference | null;
   status: PageSeoStatus;
   isFeatured: boolean;
   publishedAt: string;
@@ -65,6 +65,7 @@ const emptyForm: InsightForm = {
 
   category: "articles",
   coverImage: "",
+  coverMedia: null,
   status: "DRAFT",
   isFeatured: false,
   publishedAt: "",
@@ -119,6 +120,7 @@ function mapInsightToForm(item: AdminInsightItem): InsightForm {
 
     category: item.category || "articles",
     coverImage: item.coverImage || "",
+    coverMedia: item.coverReference || createMediaReference(item.coverImage),
     status: item.status,
     isFeatured: item.isFeatured,
     publishedAt: toDateTimeLocal(item.publishedAt),
@@ -139,7 +141,6 @@ export default function AdminInsightsPage() {
     "loading",
   );
   const [saving, setSaving] = useState(false);
-  const [uploadingCover, setUploadingCover] = useState(false);
   const [message, setMessage] = useState("");
   const [isWritingMode, setIsWritingMode] = useState(false);
   const [activeLanguage, setActiveLanguage] = useState<"en" | "id">("en");
@@ -206,34 +207,6 @@ export default function AdminInsightsPage() {
     setForm(mapInsightToForm(item));
     setActiveLanguage(item.titleEn ? "en" : "id");
     setMessage("");
-  };
-
-  const handleCoverUpload = async (file: File | null) => {
-    if (!file) return;
-
-    const token = getAdminToken();
-
-    if (!token) {
-      setMessage("Admin token not found. Please login again.");
-      return;
-    }
-
-    setUploadingCover(true);
-    setMessage("");
-
-    try {
-      const result = await uploadAdminInsightCover(token, file);
-      updateField("coverImage", result.url);
-      setMessage("Cover image uploaded successfully.");
-    } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Failed to upload cover image.",
-      );
-    } finally {
-      setUploadingCover(false);
-    }
   };
 
   const handleArchive = async () => {
@@ -305,7 +278,8 @@ export default function AdminInsightsPage() {
       metaDescriptionId: form.metaDescriptionId || null,
 
       category: form.category,
-      coverImage: form.coverImage || null,
+      coverImage: form.coverMedia?.url || form.coverImage || null,
+      coverReference: form.coverMedia,
       status: form.status,
       isFeatured: form.isFeatured,
       publishedAt: toIsoOrNull(form.publishedAt),
@@ -852,9 +826,17 @@ export default function AdminInsightsPage() {
                     onChange={(url) =>
                       updateField("coverImage", url)
                     }
+                    onReferenceChange={(reference) =>
+                      setForm((current) => ({
+                        ...current,
+                        coverImage: reference?.url || "",
+                        coverMedia: reference,
+                      }))
+                    }
                     folder="insights"
                     title="Insight Cover Image"
-                    description="Upload a new cover image or select an existing asset from the PML media library."
+                    description="Choose one reusable hero image for the insight detail and listing preview."
+                    defaultVariant="hero"
                   />
                 </div>
 
@@ -922,7 +904,7 @@ export default function AdminInsightsPage() {
 
                 <button
                   type="submit"
-                  disabled={saving || uploadingCover}
+                  disabled={saving}
                   className="rounded-full bg-[#039147] px-8 py-4 text-sm font-black text-black shadow-[0_18px_50px_rgba(3,145,71,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saving ? "Saving Insight..." : "Save Insight"}

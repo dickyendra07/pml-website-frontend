@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
+import MediaPicker from "@/components/admin/MediaPicker";
 import {
   createAdminPopup,
   getAdminPopups,
@@ -13,9 +13,8 @@ import {
   PopupItem,
   PopupLayout,
   updateAdminPopup,
-  uploadAdminPopupImage,
 } from "@/lib/admin-api";
-import { resolveMediaUrl as getAssetUrl } from "@/lib/media";
+import { MediaReference, createMediaReference } from "@/lib/media";
 
 type PopupForm = {
   id: string;
@@ -24,6 +23,7 @@ type PopupForm = {
   buttonLabel: string;
   buttonUrl: string;
   imageUrl: string;
+  imageMedia: MediaReference | null;
   type: "ANNOUNCEMENT" | "PROMOTION" | "ALERT" | "INFORMATION";
   status: PageSeoStatus;
   placementPages: string;
@@ -41,6 +41,7 @@ const emptyForm: PopupForm = {
   buttonLabel: "Request a Proposal",
   buttonUrl: "/contact",
   imageUrl: "/images/pml/hero-lab-hexagon.png",
+  imageMedia: createMediaReference("/images/pml/hero-lab-hexagon.png"),
   type: "ANNOUNCEMENT",
   status: "DRAFT",
   placementPages: "/",
@@ -96,6 +97,7 @@ function mapPopupToForm(item: PopupItem): PopupForm {
     buttonLabel: item.buttonLabel || "",
     buttonUrl: item.buttonUrl || "",
     imageUrl: item.imageUrl || "",
+    imageMedia: item.imageReference || createMediaReference(item.imageUrl),
     type: item.type,
     status: item.status,
     placementPages: item.placementPages?.join("\n") || "/",
@@ -122,7 +124,6 @@ export default function AdminPopupsPage() {
   const [form, setForm] = useState<PopupForm>(emptyForm);
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
 
   const selectedPopup = useMemo(() => {
@@ -183,32 +184,6 @@ export default function AdminPopupsPage() {
     setMessage("");
   };
 
-  const handleImageUpload = async (file: File | null) => {
-    if (!file) {
-      return;
-    }
-
-    const token = getAdminToken();
-
-    if (!token) {
-      setMessage("Admin token not found. Please login again.");
-      return;
-    }
-
-    setUploading(true);
-    setMessage("");
-
-    try {
-      const result = await uploadAdminPopupImage(token, file);
-      updateField("imageUrl", result.url);
-      setMessage("Popup image uploaded successfully.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Failed to upload popup image.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -227,7 +202,8 @@ export default function AdminPopupsPage() {
       description: form.description || null,
       buttonLabel: form.buttonLabel || null,
       buttonUrl: form.buttonUrl || null,
-      imageUrl: form.imageUrl || null,
+      imageUrl: form.imageMedia?.url || form.imageUrl || null,
+      imageReference: form.imageMedia,
       type: form.type,
       status: form.status,
       placementPages: form.placementPages
@@ -416,57 +392,26 @@ export default function AdminPopupsPage() {
                 />
               </label>
 
-              <div className="grid gap-4 rounded-[26px] border border-black/5 bg-white5 p-4 md:col-span-2 md:grid-cols-[0.9fr_1.1fr] md:p-5">
-                <div className="overflow-hidden rounded-[22px] border border-black/5 bg-black/30">
-                  {form.imageUrl && form.layout !== "TEXT_ONLY" ? (
-                    <div className="relative h-56 w-full">
-                      <Image
-                        src={getAssetUrl(form.imageUrl)}
-                        alt="Popup preview"
-                        fill
-                        sizes="(max-width: 768px) 100vw, 420px"
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-56 items-center justify-center px-6 text-center text-sm font-bold text-black/50">
-                      {form.layout === "TEXT_ONLY"
-                        ? "Text only layout tidak memakai gambar."
-                        : "Upload atau isi Image URL untuk preview popup."}
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid gap-4">
-                  <label className="grid gap-2">
-                    <span className="text-sm font-black text-black">Popup Image</span>
-                    <span className="text-xs font-semibold leading-5 text-black/50">
-                      Upload gambar JPG, PNG, atau WEBP. Idealnya landscape agar rapi di desktop dan mobile.
-                    </span>
-
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      onChange={(event) => {
-                        void handleImageUpload(event.target.files?.[0] || null);
-                        event.target.value = "";
-                      }}
-                      className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm font-bold text-black file:mr-4 file:rounded-full file:border-0 file:bg-[#039147] file:px-4 file:py-2 file:text-xs file:font-black file:text-black"
-                    />
-
-                    <input
-                      value={form.imageUrl}
-                      onChange={(event) => updateField("imageUrl", event.target.value)}
-                      placeholder="/uploads/popups/image.png"
-                      className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition placeholder:text-black/20 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
-                    />
-
-                    <span className="text-xs font-semibold text-black/50">
-                      {uploading ? "Uploading image..." : "Bisa upload dari CMS atau paste URL manual."}
-                    </span>
-                  </label>
-                </div>
+              <div className="md:col-span-2">
+                <MediaPicker
+                  value={form.imageUrl}
+                  onChange={(url) => updateField("imageUrl", url)}
+                  onReferenceChange={(reference) =>
+                    setForm((current) => ({
+                      ...current,
+                      imageUrl: reference?.url || "",
+                      imageMedia: reference,
+                    }))
+                  }
+                  folder="popups"
+                  title="Popup Image"
+                  description={
+                    form.layout === "TEXT_ONLY"
+                      ? "This layout currently hides the image. You can keep a media reference ready for another layout."
+                      : "Choose a landscape image for a polished popup across desktop and mobile."
+                  }
+                  defaultVariant="hero"
+                />
               </div>
 
               <div className="grid gap-3 md:col-span-2">

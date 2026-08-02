@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
+import MediaPicker from "@/components/admin/MediaPicker";
 import {
   getAdminPageSeoItems,
   getAdminSettings,
@@ -203,6 +204,7 @@ export default function AdminSettingsPage() {
         ogTitle: emptyToNull(formItem.ogTitle || ""),
         ogDescription: emptyToNull(formItem.ogDescription || ""),
         ogImage: emptyToNull(formItem.ogImage || ""),
+        ogImageReference: formItem.ogImageReference || null,
         canonicalUrl: emptyToNull(formItem.canonicalUrl || ""),
         status: formItem.status,
       });
@@ -550,15 +552,26 @@ export default function AdminSettingsPage() {
                     />
                   </label>
 
-                  <label className="grid gap-2">
-                    <span className="text-sm font-black text-black">OG Image</span>
-                    <input
+                  <div className="md:col-span-2">
+                    <MediaPicker
                       value={formItem.ogImage || ""}
-                      placeholder="/images/pml/hero-lab-hexagon.png"
-                      onChange={(event) => updateSeoField(item.id, "ogImage", event.target.value)}
-                      className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition placeholder:text-black/20 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+                      onChange={(url) => updateSeoField(item.id, "ogImage", url)}
+                      onReferenceChange={(reference) =>
+                        setSeoFormValues((current) => ({
+                          ...current,
+                          [item.id]: {
+                            ...current[item.id],
+                            ogImage: reference?.url || null,
+                            ogImageReference: reference,
+                          },
+                        }))
+                      }
+                      folder="seo"
+                      title="Social Sharing Image"
+                      description="Choose the image shown when this page is shared on social media. Hero Banner is recommended."
+                      defaultVariant="hero"
                     />
-                  </label>
+                  </div>
 
                   <label className="grid gap-2 md:col-span-2">
                     <span className="flex items-center justify-between gap-3 text-sm font-black text-black">

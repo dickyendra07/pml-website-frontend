@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
+import MediaPicker from "@/components/admin/MediaPicker";
 import {
   AdminCatalogueItem,
   CatalogueDownloadMode,
@@ -13,10 +13,9 @@ import {
   getAdminCatalogues,
   getAdminToken,
   updateAdminCatalogue,
-  uploadAdminCatalogueCover,
   uploadAdminCatalogueFile,
 } from "@/lib/admin-api";
-import { resolveMediaUrl as getAssetUrl } from "@/lib/media";
+import { MediaReference, createMediaReference } from "@/lib/media";
 
 type CatalogueForm = {
   id: string;
@@ -26,6 +25,7 @@ type CatalogueForm = {
   serviceType: string;
   fileUrl: string;
   coverImage: string;
+  coverMedia: MediaReference | null;
   downloadMode: CatalogueDownloadMode;
   status: PageSeoStatus;
   sortOrder: string;
@@ -39,6 +39,7 @@ const emptyForm: CatalogueForm = {
   serviceType: "",
   fileUrl: "",
   coverImage: "",
+  coverMedia: null,
   downloadMode: "REQUEST_REQUIRED",
   status: "DRAFT",
   sortOrder: "0",
@@ -61,6 +62,7 @@ function mapCatalogueToForm(item: AdminCatalogueItem): CatalogueForm {
     serviceType: item.serviceType || "",
     fileUrl: item.fileUrl || "",
     coverImage: item.coverImage || "",
+    coverMedia: item.coverReference || createMediaReference(item.coverImage),
     downloadMode: item.downloadMode || "REQUEST_REQUIRED",
     status: item.status,
     sortOrder: String(item.sortOrder || 0),
@@ -72,7 +74,6 @@ export default function AdminCataloguesPage() {
   const [form, setForm] = useState<CatalogueForm>(emptyForm);
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [saving, setSaving] = useState(false);
-  const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -132,30 +133,6 @@ export default function AdminCataloguesPage() {
   const selectCatalogue = (item: AdminCatalogueItem) => {
     setForm(mapCatalogueToForm(item));
     setMessage("");
-  };
-
-  const handleCoverUpload = async (file: File | null) => {
-    if (!file) return;
-
-    const token = getAdminToken();
-
-    if (!token) {
-      setMessage("Admin token not found. Please login again.");
-      return;
-    }
-
-    setUploadingCover(true);
-    setMessage("");
-
-    try {
-      const result = await uploadAdminCatalogueCover(token, file);
-      updateField("coverImage", result.url);
-      setMessage("Cover image uploaded successfully.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Failed to upload cover image.");
-    } finally {
-      setUploadingCover(false);
-    }
   };
 
   const handleFileUpload = async (file: File | null) => {
@@ -229,7 +206,8 @@ export default function AdminCataloguesPage() {
       description: form.description || null,
       serviceType: form.serviceType || null,
       fileUrl: form.fileUrl || null,
-      coverImage: form.coverImage || null,
+      coverImage: form.coverMedia?.url || form.coverImage || null,
+      coverReference: form.coverMedia,
       downloadMode: form.downloadMode,
       status: form.status,
       sortOrder: Number(form.sortOrder || 0),
@@ -419,75 +397,48 @@ export default function AdminCataloguesPage() {
                 />
               </label>
 
-              <div className="grid gap-4 rounded-[26px] border border-black/5 bg-white5 p-4 md:col-span-2 md:grid-cols-[0.9fr_1.1fr] md:p-5">
-                <div className="overflow-hidden rounded-[22px] border border-black/5 bg-black/30">
-                  {form.coverImage ? (
-                    <div className="relative h-56 w-full">
-                      <Image
-                        src={getAssetUrl(form.coverImage)}
-                        alt="Catalogue cover preview"
-                        fill
-                        sizes="(max-width: 768px) 100vw, 420px"
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-56 items-center justify-center px-6 text-center text-sm font-bold text-black/50">
-                      Upload cover image to preview catalogue card.
-                    </div>
-                  )}
-                </div>
+              <div className="md:col-span-2">
+                <MediaPicker
+                  value={form.coverImage}
+                  onChange={(url) => updateField("coverImage", url)}
+                  onReferenceChange={(reference) =>
+                    setForm((current) => ({
+                      ...current,
+                      coverImage: reference?.url || "",
+                      coverMedia: reference,
+                    }))
+                  }
+                  folder="catalogue"
+                  title="Catalogue Cover Image"
+                  description="Choose a reusable cover from the PML Media Library. Card Image is recommended for catalogue listings."
+                  defaultVariant="card"
+                />
+              </div>
 
-                <div className="grid gap-4">
-                  <label className="grid gap-2">
-                    <span className="text-sm font-black text-black">Cover Image</span>
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      onChange={(event) => {
-                        void handleCoverUpload(event.target.files?.[0] || null);
-                        event.target.value = "";
-                      }}
-                      className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm font-bold text-black file:mr-4 file:rounded-full file:border-0 file:bg-[#039147] file:px-4 file:py-2 file:text-xs file:font-black file:text-black"
-                    />
+              <div className="rounded-[26px] border border-black/5 bg-white5 p-5 md:col-span-2">
+                <label className="grid gap-2">
+                  <span className="text-sm font-black text-black">PDF Catalogue</span>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(event) => {
+                      void handleFileUpload(event.target.files?.[0] || null);
+                      event.target.value = "";
+                    }}
+                    className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm font-bold text-black file:mr-4 file:rounded-full file:border-0 file:bg-[#039147] file:px-4 file:py-2 file:text-xs file:font-black file:text-white"
+                  />
 
-                    <input
-                      value={form.coverImage}
-                      onChange={(event) => updateField("coverImage", event.target.value)}
-                      placeholder="/uploads/catalogues/covers/image.png"
-                      className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition placeholder:text-black/20 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
-                    />
+                  <input
+                    value={form.fileUrl}
+                    onChange={(event) => updateField("fileUrl", event.target.value)}
+                    placeholder="/uploads/catalogues/files/catalogue.pdf"
+                    className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition placeholder:text-black/20 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+                  />
 
-                    <span className="text-xs font-semibold text-black/50">
-                      {uploadingCover ? "Uploading cover..." : "Upload image or paste cover URL manually."}
-                    </span>
-                  </label>
-
-                  <label className="grid gap-2">
-                    <span className="text-sm font-black text-black">PDF Catalogue</span>
-                    <input
-                      type="file"
-                      accept="application/pdf"
-                      onChange={(event) => {
-                        void handleFileUpload(event.target.files?.[0] || null);
-                        event.target.value = "";
-                      }}
-                      className="rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm font-bold text-black file:mr-4 file:rounded-full file:border-0 file:bg-[#039147] file:px-4 file:py-2 file:text-xs file:font-black file:text-black"
-                    />
-
-                    <input
-                      value={form.fileUrl}
-                      onChange={(event) => updateField("fileUrl", event.target.value)}
-                      placeholder="/uploads/catalogues/files/catalogue.pdf"
-                      className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition placeholder:text-black/20 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
-                    />
-
-                    <span className="text-xs font-semibold text-black/50">
-                      {uploadingFile ? "Uploading PDF..." : "Upload PDF or paste file URL manually."}
-                    </span>
-                  </label>
-                </div>
+                  <span className="text-xs font-semibold text-black/50">
+                    {uploadingFile ? "Uploading PDF..." : "Upload PDF or paste file URL manually."}
+                  </span>
+                </label>
               </div>
 
               <label className="grid gap-2">
@@ -548,7 +499,7 @@ export default function AdminCataloguesPage() {
 
               <button
                 type="submit"
-                disabled={saving || uploadingCover || uploadingFile}
+                disabled={saving || uploadingFile}
                 className="rounded-full bg-[#039147] px-8 py-4 text-sm font-black text-black shadow-[0_18px_50px_rgba(3,145,71,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving ? "Saving Catalogue..." : "Save Catalogue"}
