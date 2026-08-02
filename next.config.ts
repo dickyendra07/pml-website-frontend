@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const isProduction = process.env.NODE_ENV === "production";
+const mediaBaseUrl =
+  process.env.NEXT_PUBLIC_MEDIA_URL ||
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
+  (isProduction ? "" : "http://localhost:4000");
+
+const remoteImagePatterns = mediaBaseUrl
+  ? [new URL("/uploads/**", mediaBaseUrl)]
+  : [];
 
 const scriptSources = [
   "'self'",
@@ -59,6 +67,12 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+
+  images: {
+    remotePatterns: remoteImagePatterns,
+    dangerouslyAllowLocalIP: !isProduction,
+  },
+
   async headers() {
     return [
       {

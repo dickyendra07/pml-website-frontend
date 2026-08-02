@@ -1,3 +1,5 @@
+import { resolveMediaUrl } from "./media";
+
 export type ProposalPayload = {
   name: string;
   company: string;
@@ -15,11 +17,15 @@ export type ApiSubmitResult = {
   id?: string;
 };
 
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
-  (process.env.NODE_ENV === "development" ? "http://localhost:4000/api" : "");
+  (process.env.NODE_ENV === "development"
+    ? "http://localhost:4000/api"
+    : "");
 
 const hasApiBaseUrl = API_BASE_URL.length > 0;
+
 
 export async function submitProposal(
   payload: ProposalPayload,
@@ -312,9 +318,7 @@ export async function getFacilities() {
     throw new Error("Failed to load facilities.");
   }
 
-  const data = (await response.json()) as FacilityApiItem[];
-
-  return data;
+  return (await response.json()) as FacilityApiItem[];
 }
 
 export async function getFacilityByKey(key: string) {
@@ -334,8 +338,10 @@ export async function getFacilityByKey(key: string) {
     eyebrow: item.eyebrowEn || "",
     href: `/facilities/${item.key}`,
     summary: item.summaryEn || "",
-    image: item.image || "",
-    gallery: item.gallery.map((gallery) => gallery.image),
+    image: resolveMediaUrl(item.image),
+    gallery: Array.isArray(item.gallery)
+      ? item.gallery.map((gallery) => resolveMediaUrl(gallery.image))
+      : [],
     points: item.pointsEn || [],
   } satisfies FacilityFrontendItem;
 }
