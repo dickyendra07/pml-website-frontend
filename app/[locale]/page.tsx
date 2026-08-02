@@ -10,6 +10,7 @@ import WhyPml from "@/components/home/WhyPml";
 import CTACard from "@/components/ui/CTACard";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { isLocale } from "@/i18n/config";
+import { generatePageMetadata } from "@/lib/page-seo";
 
 type LocalizedHomePageProps = {
   params: Promise<{
@@ -26,28 +27,27 @@ export async function generateMetadata({
     notFound();
   }
 
-  if (locale === "id") {
-    return {
-      title: "Pharma Metric Labs | Organisasi Riset Kontrak di Indonesia",
-      description:
-        "PML menyediakan layanan CRO terintegrasi di Indonesia, termasuk studi BA/BE, uji klinis, analisis kontrak, dan manajemen regulasi.",
-      alternates: {
-        canonical: "/id",
-        languages: {
-          en: "/en",
-          id: "/id",
-          "x-default": "/en",
-        },
-      },
-    };
-  }
+  const fallback =
+    locale === "id"
+      ? {
+          title: "Pharma Metric Labs | Organisasi Riset Kontrak di Indonesia",
+          description:
+            "PML menyediakan layanan CRO terintegrasi di Indonesia, termasuk studi BA/BE, uji klinis, analisis kontrak, dan manajemen regulasi.",
+        }
+      : {
+          title:
+            "Pharma Metric Labs | Contract Research Organization in Indonesia",
+          description:
+            "PML provides integrated CRO services in Indonesia, including BA/BE study, clinical trial, contract analysis, and regulatory management.",
+        };
+
+  const metadata = await generatePageMetadata("/", fallback);
 
   return {
-    title: "Pharma Metric Labs | Contract Research Organization in Indonesia",
-    description:
-      "PML provides integrated CRO services in Indonesia, including BA/BE study, clinical trial, contract analysis, and regulatory management.",
+    ...metadata,
     alternates: {
-      canonical: "/en",
+      ...metadata.alternates,
+      canonical: `/${locale}`,
       languages: {
         en: "/en",
         id: "/id",
