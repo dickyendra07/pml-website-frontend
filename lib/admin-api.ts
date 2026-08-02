@@ -884,6 +884,34 @@ export async function updateAdminMediaAsset(
   return parseJsonResponse<MediaAssetItem>(response);
 }
 
+export type CropMediaPayload = {
+  ratio: string;
+  width: number;
+  height: number;
+  x?: number;
+  y?: number;
+};
+
+
+export async function cropAdminMediaAsset(
+  token: string,
+  id: string,
+  payload: CropMediaPayload,
+) {
+  const response = await fetch(`${API_BASE_URL}/admin/media/${id}/crop`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseJsonResponse(response);
+}
+
+
+
 export async function deleteAdminMediaAsset(token: string, id: string) {
   const response = await fetch(`${API_BASE_URL}/admin/media/${id}`, {
     method: "DELETE",

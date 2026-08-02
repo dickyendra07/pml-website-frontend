@@ -12,10 +12,13 @@ import {
 } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
+import MediaVariantPreviewModal from "@/components/admin/MediaVariantPreviewModal";
+import MediaCropModal from "@/components/admin/MediaCropModal";
 import {
   MediaAssetItem,
   MediaAssetType,
   deleteAdminMediaAsset,
+  cropAdminMediaAsset,
   getAdminMediaAssets,
   getAdminToken,
   updateAdminMediaAsset,
@@ -131,6 +134,14 @@ export default function AdminMediaPage() {
     "newest" | "oldest" | "name-asc" | "name-desc" | "largest"
   >("newest");
   const [copiedId, setCopiedId] = useState("");
+  const [cropOpen, setCropOpen] = useState(false);
+
+  const [variantPreview, setVariantPreview] = useState<{
+    url: string;
+    name: string;
+    width?: number | null;
+    height?: number | null;
+  } | null>(null);
 
   const selectedMedia = useMemo(() => {
     return items.find((item) => item.id === form.id) || null;
@@ -447,6 +458,69 @@ export default function AdminMediaPage() {
 
     await processUploadFiles(files);
   };
+
+
+  const handleVariantCopy = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(getAssetUrl(url));
+
+      setMessage("Variant URL copied.");
+      setMessageTone("success");
+    } catch {
+      setMessage("Failed to copy variant URL.");
+      setMessageTone("error");
+    }
+  };
+
+
+  const handleCropSave = async (payload: {
+    ratio: string;
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+  }) => {
+    if (!selectedMedia) return;
+
+    const token = getAdminToken();
+
+    if (!token) {
+      setMessage("Admin session expired.");
+      setMessageTone("error");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      await cropAdminMediaAsset(
+        token,
+        selectedMedia.id,
+        payload,
+      );
+
+      await loadMedia();
+
+      setForm((current) => ({
+        ...current,
+      }));
+
+      setCropOpen(false);
+
+      setMessage("Image crop variant generated successfully.");
+      setMessageTone("success");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to crop image.",
+      );
+      setMessageTone("error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
 
   const handleSave = async (
     event: FormEvent<HTMLFormElement>,
@@ -1258,14 +1332,20 @@ export default function AdminMediaPage() {
                                 </p>
                               </div>
 
-                              <a
-                                href={getAssetUrl(variant.url)}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="rounded-full bg-black px-3 py-1.5 text-[11px] font-black text-white"
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setVariantPreview({
+                                    url: getAssetUrl(variant.url),
+                                    name: variant.name,
+                                    width: variant.width,
+                                    height: variant.height,
+                                  })
+                                }
+                                className="rounded-full bg-black px-4 py-2 text-[11px] font-black text-white transition hover:-translate-y-0.5"
                               >
-                                Open
-                              </a>
+                                Preview
+                              </button>
                             </div>
 
                           </div>
@@ -1273,6 +1353,18 @@ export default function AdminMediaPage() {
 
                       </div>
 
+                    </div>
+                  ) : null}
+
+                  {selectedMedia.type === "IMAGE" ? (
+                    <div className="mb-5">
+                      <button
+                        type="button"
+                        onClick={() => setCropOpen(true)}
+                        className="w-full rounded-full bg-[#039147] px-5 py-3 text-sm font-black text-white transition hover:-translate-y-0.5"
+                      >
+                        Crop Image
+                      </button>
                     </div>
                   ) : null}
 
@@ -1427,6 +1519,32 @@ export default function AdminMediaPage() {
           </div>
         </>
       ) : null}
+      {cropOpen && selectedMedia ? (
+        <MediaCropModal
+          imageUrl={getAssetUrl(selectedMedia.url)}
+          onClose={() => setCropOpen(false)}
+          onSave={handleCropSave}
+        />
+      ) : null}
+
+
+      {variantPreview ? (
+        <MediaVariantPreviewModal
+          open={Boolean(variantPreview)}
+          url={variantPreview.url}
+          name={variantPreview.name}
+          width={variantPreview.width}
+          height={variantPreview.height}
+          onClose={() => setVariantPreview(null)}
+          onCopy={() => void handleVariantCopy(variantPreview.url)}
+          onUse={() => {
+            setMessage("Variant image ready to use.");
+            setMessageTone("success");
+            setVariantPreview(null);
+          }}
+        />
+      ) : null}
+
     </AdminShell>
   );
 }
