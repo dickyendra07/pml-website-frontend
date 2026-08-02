@@ -592,6 +592,7 @@ export default function AdminInsightsPage() {
                       <RichTextEditor
                         value={form.contentEn}
                         onChange={(value) => updateField("contentEn", value)}
+                        mediaFolder="insights"
                       />
                     </div>
 
@@ -732,6 +733,7 @@ export default function AdminInsightsPage() {
                       <RichTextEditor
                         value={form.contentId}
                         onChange={(value) => updateField("contentId", value)}
+                        mediaFolder="insights"
                       />
                     </div>
 

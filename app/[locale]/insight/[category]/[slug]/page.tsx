@@ -7,6 +7,7 @@ import { getInsightBySlug } from "@/lib/api";
 import { isLocale, type Locale } from "@/i18n/config";
 import { generatePageMetadata } from "@/lib/page-seo";
 import InsightSidebar from "@/components/pages/InsightSidebar";
+import RichTextContent from "@/components/pages/RichTextContent";
 import { resolveMediaUrl } from "@/lib/media";
 
 type Props = {
@@ -190,9 +191,10 @@ export default async function InsightDetailPage({
               </p>
 
 
-              <div className="mt-10 whitespace-pre-line text-base leading-9 text-black/80">
-                {data.content}
-              </div>
+              <RichTextContent
+                content={data.content}
+                className="mt-10 text-base leading-9 text-black/80"
+              />
 
             </div>
 

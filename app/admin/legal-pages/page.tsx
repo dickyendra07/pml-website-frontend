@@ -81,7 +81,11 @@ export default function AdminLegalPagesPage() {
 
 
   useEffect(() => {
-    void loadPages();
+    const timer = window.setTimeout(() => {
+      void loadPages();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [loadPages]);
 
 
@@ -377,6 +381,8 @@ export default function AdminLegalPagesPage() {
                     value,
                   )
                 }
+
+                mediaFolder="legal"
 
               />
 

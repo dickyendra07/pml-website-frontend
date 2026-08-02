@@ -8,10 +8,81 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import MediaLibraryModal from "@/components/admin/MediaLibraryModal";
+import { resolveMediaUrl } from "@/lib/media";
+
+const MediaImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      mediaId: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-media-id"),
+        renderHTML: (attributes) =>
+          attributes.mediaId
+            ? { "data-media-id": attributes.mediaId }
+            : {},
+      },
+      variant: {
+        default: "original",
+        parseHTML: (element) =>
+          element.getAttribute("data-variant") || "original",
+        renderHTML: (attributes) => ({
+          "data-variant": attributes.variant || "original",
+        }),
+      },
+    };
+  },
+  addNodeView() {
+    return ({ node }) => {
+      const element = document.createElement("img");
+
+      const render = (attributes: Record<string, unknown>) => {
+        const source = resolveMediaUrl(
+          typeof attributes.src === "string" ? attributes.src : "",
+        );
+
+        element.src = source;
+        element.alt =
+          typeof attributes.alt === "string" ? attributes.alt : "Article image";
+        element.draggable = true;
+
+        if (typeof attributes.title === "string") {
+          element.title = attributes.title;
+        } else {
+          element.removeAttribute("title");
+        }
+
+        if (typeof attributes.mediaId === "string") {
+          element.dataset.mediaId = attributes.mediaId;
+        } else {
+          delete element.dataset.mediaId;
+        }
+
+        element.dataset.variant =
+          typeof attributes.variant === "string"
+            ? attributes.variant
+            : "original";
+      };
+
+      render(node.attrs);
+
+      return {
+        dom: element,
+        update: (updatedNode) => {
+          if (updatedNode.type.name !== node.type.name) return false;
+
+          render(updatedNode.attrs);
+          return true;
+        },
+      };
+    };
+  },
+});
 
 type RichTextEditorProps = {
   value: string;
   onChange: (value: string) => void;
+  mediaFolder?: string;
 };
 
 function ToolbarButton({
@@ -49,7 +120,11 @@ function ToolbarGroup({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function RichTextEditor({ value, onChange }: RichTextEditorProps) {
+export default function RichTextEditor({
+  value,
+  onChange,
+  mediaFolder = "content",
+}: RichTextEditorProps) {
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
 
   const editor = useEditor({
@@ -60,7 +135,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           levels: [1, 2, 3],
         },
       }),
-      Image.configure({
+      MediaImage.configure({
         inline: false,
         allowBase64: false,
       }),
@@ -296,13 +371,24 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
 
       {imagePickerOpen ? (
         <MediaLibraryModal
+          folder={mediaFolder}
           onClose={() => setImagePickerOpen(false)}
-          onSelect={(url) => {
+          onSelect={(reference) => {
+            const filename = decodeURIComponent(
+              reference.url.split("?")[0].split("/").pop() || "Article image",
+            );
+
             editor
               .chain()
               .focus()
-              .setImage({
-                src: url,
+              .insertContent({
+                type: "image",
+                attrs: {
+                  src: reference.url,
+                  alt: filename,
+                  mediaId: reference.mediaId,
+                  variant: reference.variant,
+                },
               })
               .run();
 

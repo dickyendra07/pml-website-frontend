@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import RichTextContent from "@/components/pages/RichTextContent";
 import type { Locale } from "@/i18n/config";
 import { localizeHref } from "@/i18n/client";
 
@@ -123,8 +124,9 @@ export default function LegalPolicyLayout({
                     </h2>
 
                     {section.paragraphs?.map((paragraph) => (
-                      <div
+                      <RichTextContent
                         key={paragraph}
+                        content={paragraph}
                         className="
                           legal-content
                           mt-5
@@ -211,9 +213,6 @@ export default function LegalPolicyLayout({
                           [&_strong]:font-black
                           [&_strong]:text-black
                         "
-                        dangerouslySetInnerHTML={{
-                          __html: paragraph,
-                        }}
                       />
                     ))}
 

@@ -43,6 +43,10 @@ type MediaPickerProps = {
   title?: string;
   description?: string;
   defaultVariant?: MediaPickerVariant;
+  dialogOnly?: boolean;
+  dialogTitle?: string;
+  confirmLabel?: string;
+  onDismiss?: () => void;
 };
 
 type VariantOption = {
@@ -167,10 +171,14 @@ export default function MediaPicker({
   title = "Featured Image",
   description = "Upload a new image, choose an existing asset, or keep a manual URL.",
   defaultVariant = "original",
+  dialogOnly = false,
+  dialogTitle = "Select Media",
+  confirmLabel = "Use This Image",
+  onDismiss,
 }: MediaPickerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(dialogOnly);
   const [items, setItems] = useState<MediaAssetItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<MediaAssetItem | null>(null);
   const [selectedVariant, setSelectedVariant] =
@@ -290,6 +298,7 @@ export default function MediaPicker({
         setCropItem(null);
       } else {
         setOpen(false);
+        onDismiss?.();
       }
     };
 
@@ -300,7 +309,7 @@ export default function MediaPicker({
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [cropItem, open]);
+  }, [cropItem, onDismiss, open]);
 
   const emitReference = (reference: MediaReference | null) => {
     onChange(reference?.url || "");
@@ -326,6 +335,7 @@ export default function MediaPicker({
     setSearch("");
     setActiveFolder("all");
     setFailedModalUrl("");
+    onDismiss?.();
   };
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -355,8 +365,14 @@ export default function MediaPicker({
       ]);
       setSelectedItem(uploaded);
       setSelectedVariant(variant);
-      applyAssetReference(uploaded, variant);
-      setMessage("Image uploaded to the Media Library and selected.");
+      if (!dialogOnly) {
+        applyAssetReference(uploaded, variant);
+      }
+      setMessage(
+        dialogOnly
+          ? "Image uploaded to the Media Library. Review it, then insert it."
+          : "Image uploaded to the Media Library and selected.",
+      );
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Image upload failed.",
@@ -431,7 +447,9 @@ export default function MediaPicker({
     : null;
 
   return (
-    <section className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_60px_rgba(0,0,0,0.06)] md:p-6">
+    <section
+      className={`${dialogOnly ? "hidden" : ""} rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_60px_rgba(0,0,0,0.06)] md:p-6`}
+    >
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-[#039147]">
@@ -629,26 +647,36 @@ export default function MediaPicker({
                 aria-label="Select media"
                 className="flex h-[min(820px,94vh)] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_30px_100px_rgba(0,0,0,0.35)] sm:rounded-[34px]"
               >
-                <div className="flex items-center justify-between border-b border-black/5 px-5 py-5 sm:px-7">
+                <div className="flex items-center justify-between gap-4 border-b border-black/5 px-5 py-5 sm:px-7">
                   <div>
                     <p className="text-xs font-black uppercase tracking-[0.16em] text-[#039147]">
                       Media Library
                     </p>
                     <h2 className="mt-2 text-2xl font-black text-black sm:text-3xl">
-                      Select Media
+                      {dialogTitle}
                     </h2>
                     <p className="mt-1 text-xs font-semibold text-black/40 sm:text-sm">
                       Choose an asset and the best variant for this placement.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={closeLibrary}
-                    aria-label="Close media library"
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/10 text-xl font-black transition hover:border-[#039147] hover:text-[#039147]"
-                  >
-                    ×
-                  </button>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="hidden rounded-full bg-[#039147] px-5 py-3 text-xs font-black text-white shadow-[0_10px_24px_rgba(3,145,71,0.18)] transition hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-60 sm:inline-flex"
+                    >
+                      {uploading ? "Uploading…" : "Upload Image"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={closeLibrary}
+                      aria-label="Close media library"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/10 text-xl font-black transition hover:border-[#039147] hover:text-[#039147]"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -956,7 +984,7 @@ export default function MediaPicker({
                             disabled={selectedPreviewUnavailable}
                             className="rounded-full bg-[#039147] px-5 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(3,145,71,0.18)] disabled:cursor-not-allowed disabled:opacity-40"
                           >
-                            Use This Image
+                            {confirmLabel}
                           </button>
                         </div>
                       </>
