@@ -1,4 +1,4 @@
-import { resolveMediaUrl } from "./media";
+import { resolveMediaUrl, type MediaSource } from "./media";
 
 export type ProposalPayload = {
   name: string;
@@ -70,7 +70,23 @@ export type CatalogueItem = {
   updatedAt: string;
 };
 
-export async function getCatalogues() {
+type CatalogueApiItem = Omit<
+  CatalogueItem,
+  "fileUrl" | "coverImage"
+> & {
+  fileUrl: MediaSource;
+  coverImage: MediaSource;
+};
+
+function normalizeCatalogue(item: CatalogueApiItem): CatalogueItem {
+  return {
+    ...item,
+    fileUrl: resolveMediaUrl(item.fileUrl) || null,
+    coverImage: resolveMediaUrl(item.coverImage) || null,
+  };
+}
+
+export async function getCatalogues(): Promise<CatalogueItem[]> {
   if (!hasApiBaseUrl) {
     return [];
   }
@@ -83,7 +99,9 @@ export async function getCatalogues() {
     throw new Error("Failed to load catalogues.");
   }
 
-  return (await response.json()) as CatalogueItem[];
+  const items = (await response.json()) as CatalogueApiItem[];
+
+  return Array.isArray(items) ? items.map(normalizeCatalogue) : [];
 }
 
 export async function submitCatalogueRequest(payload: {
@@ -134,6 +152,17 @@ export type InsightItem = {
   updatedAt: string;
 };
 
+type InsightApiItem = Omit<InsightItem, "coverImage"> & {
+  coverImage: MediaSource;
+};
+
+function normalizeInsight(item: InsightApiItem): InsightItem {
+  return {
+    ...item,
+    coverImage: resolveMediaUrl(item.coverImage) || null,
+  };
+}
+
 export async function getInsights(
   category?: string,
   locale: "en" | "id" = "en",
@@ -161,7 +190,9 @@ export async function getInsights(
     throw new Error("Failed to load insights.");
   }
 
-  return (await response.json()) as InsightItem[];
+  const items = (await response.json()) as InsightApiItem[];
+
+  return Array.isArray(items) ? items.map(normalizeInsight) : [];
 }
 
 export async function getInsightBySlug(
@@ -183,7 +214,9 @@ export async function getInsightBySlug(
     return null;
   }
 
-  return (await response.json()) as InsightItem;
+  const item = (await response.json()) as InsightApiItem;
+
+  return normalizeInsight(item);
 }
 
 export type HomepageFeature = {
@@ -201,7 +234,22 @@ export type HomepageFeature = {
   updatedAt: string;
 };
 
-export async function getHomepageFeatures(type?: string) {
+type HomepageFeatureApiItem = Omit<HomepageFeature, "imageUrl"> & {
+  imageUrl: MediaSource;
+};
+
+function normalizeHomepageFeature(
+  item: HomepageFeatureApiItem,
+): HomepageFeature {
+  return {
+    ...item,
+    imageUrl: resolveMediaUrl(item.imageUrl) || null,
+  };
+}
+
+export async function getHomepageFeatures(
+  type?: string,
+): Promise<HomepageFeature[]> {
   if (!hasApiBaseUrl) {
     return [];
   }
@@ -219,7 +267,9 @@ export async function getHomepageFeatures(type?: string) {
     throw new Error("Failed to load homepage features.");
   }
 
-  return (await response.json()) as HomepageFeature[];
+  const items = (await response.json()) as HomepageFeatureApiItem[];
+
+  return Array.isArray(items) ? items.map(normalizeHomepageFeature) : [];
 }
 
 export type CareerItem = {

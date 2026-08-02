@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { resolveMediaUrl, type MediaSource } from "@/lib/media";
 
 export type PageSeo = {
   path: string;
@@ -9,6 +10,10 @@ export type PageSeo = {
   ogDescription?: string | null;
   ogImage?: string | null;
   canonicalUrl?: string | null;
+};
+
+type PageSeoApiItem = Omit<PageSeo, "ogImage"> & {
+  ogImage?: MediaSource;
 };
 
 const API_BASE_URL =
@@ -40,7 +45,12 @@ export async function getPageSeo(path: string): Promise<PageSeo | null> {
       return null;
     }
 
-    return (await response.json()) as PageSeo;
+    const item = (await response.json()) as PageSeoApiItem;
+
+    return {
+      ...item,
+      ogImage: resolveMediaUrl(item.ogImage) || null,
+    };
   } catch {
     return null;
   }
@@ -60,7 +70,7 @@ export async function generatePageMetadata(
   const ogTitle = seo?.ogTitle || title;
   const ogDescription = seo?.ogDescription || description;
   const canonicalUrl = seo?.canonicalUrl || `${SITE_URL}${path === "/" ? "" : path}`;
-  const ogImage = seo?.ogImage || DEFAULT_OG_IMAGE;
+  const ogImage = resolveMediaUrl(seo?.ogImage) || DEFAULT_OG_IMAGE;
 
   return {
     title,

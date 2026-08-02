@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
-import { resolveMediaUrl } from "@/lib/media";
+import { resolveMediaUrl, type MediaSource } from "@/lib/media";
 
 type PopupLayout = "IMAGE_LEFT" | "IMAGE_RIGHT" | "IMAGE_TOP" | "TEXT_ONLY";
 
@@ -22,7 +22,11 @@ type PopupItem = {
 };
 
 type PopupResponse = {
-  popup: PopupItem | null;
+  popup:
+    | (Omit<PopupItem, "imageUrl"> & {
+        imageUrl: MediaSource;
+      })
+    | null;
 };
 
 const API_BASE_URL =
@@ -115,11 +119,16 @@ export default function HomepagePopup() {
 
         if (!isMounted || !result.popup) return;
 
-        if (shouldHidePopup(result.popup)) {
+        const normalizedPopup: PopupItem = {
+          ...result.popup,
+          imageUrl: resolveMediaUrl(result.popup.imageUrl) || null,
+        };
+
+        if (shouldHidePopup(normalizedPopup)) {
           return;
         }
 
-        setPopup(result.popup);
+        setPopup(normalizedPopup);
 
         window.setTimeout(() => {
           if (isMounted) setIsVisible(true);

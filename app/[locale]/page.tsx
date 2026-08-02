@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import HomepagePopup from "@/components/popups/HomepagePopup";
+import HomepageFeatures from "@/components/home/HomepageFeatures";
 import Hero from "@/components/home/Hero";
 import Stats from "@/components/home/Stats";
 import Services from "@/components/home/Services";
@@ -73,6 +74,7 @@ export default async function LocalizedHomePage({
       <Stats />
       <Services />
       <WhyPml />
+      <HomepageFeatures />
       <CTACard
         eyebrow={locale === "id" ? "Mulai Sebuah Proyek" : "Start a Project"}
         title={

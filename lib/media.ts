@@ -7,23 +7,55 @@ const MEDIA_BASE_URL =
       : "")
   ).replace(/\/$/, "");
 
-export function resolveMediaUrl(
-  value?: string | null,
-) {
-  if (!value) return "";
+export type MediaSource =
+  | string
+  | {
+      url?: MediaSource;
+      path?: MediaSource;
+      src?: MediaSource;
+    }
+  | null
+  | undefined;
 
-  if (
-    value.startsWith("http://") ||
-    value.startsWith("https://")
-  ) {
-    return value;
+function getMediaPath(
+  value: MediaSource,
+  visited = new Set<object>(),
+): string {
+  if (typeof value === "string") {
+    return value.trim();
   }
 
-  if (value.startsWith("/uploads")) {
+  if (!value || typeof value !== "object" || visited.has(value)) {
+    return "";
+  }
+
+  visited.add(value);
+
+  for (const candidate of [value.url, value.path, value.src]) {
+    const path = getMediaPath(candidate, visited);
+
+    if (path) {
+      return path;
+    }
+  }
+
+  return "";
+}
+
+export function resolveMediaUrl(value: MediaSource) {
+  const path = getMediaPath(value);
+
+  if (!path) return "";
+
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+
+  if (path === "/uploads" || path.startsWith("/uploads/")) {
     return MEDIA_BASE_URL
-      ? `${MEDIA_BASE_URL}${value}`
-      : value;
+      ? `${MEDIA_BASE_URL}${path}`
+      : path;
   }
 
-  return value;
+  return path;
 }
