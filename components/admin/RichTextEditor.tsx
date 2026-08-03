@@ -126,6 +126,15 @@ export default function RichTextEditor({
   mediaFolder = "content",
 }: RichTextEditorProps) {
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
+  const [linkEditorOpen, setLinkEditorOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkPreviewText, setLinkPreviewText] = useState("");
+  const [linkOpenInNewTab, setLinkOpenInNewTab] = useState(false);
+  const [linkSelection, setLinkSelection] = useState<{
+    from: number;
+    to: number;
+  } | null>(null);
+  const [linkError, setLinkError] = useState("");
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -134,6 +143,8 @@ export default function RichTextEditor({
         heading: {
           levels: [1, 2, 3],
         },
+        link: false,
+        underline: false,
       }),
       MediaImage.configure({
         inline: false,
@@ -150,8 +161,8 @@ export default function RichTextEditor({
         linkOnPaste: true,
         HTMLAttributes: {
           class: "text-[#039147] underline underline-offset-4 decoration-[#039147]/40",
-          rel: "noopener noreferrer",
-          target: "_blank",
+          rel: null,
+          target: null,
         },
       }),
     ],
@@ -221,36 +232,88 @@ export default function RichTextEditor({
     }
   };
 
-  const setLink = () => {
-    const previousUrl = editor.getAttributes("link").href || "";
-    const selectedText = editor.state.doc.textBetween(
-      editor.state.selection.from,
-      editor.state.selection.to,
-      " "
-    );
+  const openLinkEditor = () => {
+    const editingExistingLink = editor.isActive("link");
 
-    if (!selectedText && !previousUrl) {
-      window.alert("Highlight kata atau kalimat dulu, lalu klik Insert Link.");
+    if (editingExistingLink) {
+      editor.chain().focus().extendMarkRange("link").run();
+    }
+
+    const { from, to } = editor.state.selection;
+    const linkAttributes = editor.getAttributes("link");
+    const selectedText = editor.state.doc
+      .textBetween(from, to, " ")
+      .trim();
+
+    setLinkSelection({ from, to });
+    setLinkPreviewText(selectedText);
+    setLinkUrl(
+      typeof linkAttributes.href === "string" ? linkAttributes.href : "",
+    );
+    setLinkOpenInNewTab(linkAttributes.target === "_blank");
+    setLinkError(
+      selectedText
+        ? ""
+        : "Highlight text in the editor before inserting a link.",
+    );
+    setLinkEditorOpen(true);
+  };
+
+  const closeLinkEditor = () => {
+    if (linkSelection) {
+      editor.commands.setTextSelection(linkSelection);
+      editor.commands.focus();
+    }
+
+    setLinkEditorOpen(false);
+    setLinkError("");
+  };
+
+  const isSupportedLinkUrl = (url: string) => {
+    if (url.startsWith("/") && !url.startsWith("//")) return true;
+    if (url.startsWith("#")) return true;
+
+    return /^(https?:\/\/|mailto:|tel:)/i.test(url);
+  };
+
+  const saveLink = () => {
+    const normalizedUrl = linkUrl.trim();
+
+    if (!linkSelection || !linkPreviewText) {
+      setLinkError("Highlight text in the editor before inserting a link.");
       return;
     }
 
-    const url = window.prompt(
-      "Masukkan URL internal/external. Contoh: /services/babe-studies",
-      previousUrl
-    );
-
-    if (url === null) return;
-
-    if (url.trim() === "") {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    if (!normalizedUrl) {
+      setLinkError("Enter an internal or external URL.");
       return;
     }
 
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url.trim() }).run();
+    if (!isSupportedLinkUrl(normalizedUrl)) {
+      setLinkError(
+        "Use an internal path such as /services/clinical-trial or a full https:// URL.",
+      );
+      return;
+    }
+
+    editor
+      .chain()
+      .focus()
+      .setTextSelection(linkSelection)
+      .setLink({
+        href: normalizedUrl,
+        target: linkOpenInNewTab ? "_blank" : null,
+        rel: linkOpenInNewTab ? "noopener noreferrer" : null,
+      })
+      .run();
+
+    setLinkEditorOpen(false);
+    setLinkError("");
   };
 
   return (
-    <div className="overflow-hidden rounded-[32px] border border-black/5 bg-white shadow-sm transition focus-within:border-[#039147] focus-within:ring-4 focus-within:ring-[#039147]/10">
+    <>
+      <div className="overflow-hidden rounded-[32px] border border-black/5 bg-white shadow-sm transition focus-within:border-[#039147] focus-within:ring-4 focus-within:ring-[#039147]/10">
       <div className="sticky top-0 z-10 border-b border-black/5 bg-[#f6faf7]/95 p-3 backdrop-blur">
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -335,7 +398,11 @@ export default function RichTextEditor({
             </ToolbarGroup>
 
             <ToolbarGroup>
-              <ToolbarButton active={editor.isActive("link")} onClick={setLink} title="Insert link">
+              <ToolbarButton
+                active={editor.isActive("link")}
+                onClick={openLinkEditor}
+                title="Insert link"
+              >
                 Insert Link
               </ToolbarButton>
 
@@ -397,10 +464,132 @@ export default function RichTextEditor({
         />
       ) : null}
 
-      <div className="border-t border-black/5 bg-white px-5 py-4 text-xs font-bold leading-6 text-black/45">
-        Tips: untuk internal link SEO, highlight kata tertentu seperti “bioequivalence study”
-        lalu klik <span className="font-black text-[#039147]">Insert Link</span>.
+        <div className="border-t border-black/5 bg-white px-5 py-4 text-xs font-bold leading-6 text-black/45">
+          Tips: untuk internal link SEO, highlight kata tertentu seperti “bioequivalence study”
+          lalu klik <span className="font-black text-[#039147]">Insert Link</span>.
+        </div>
       </div>
-    </div>
+
+      {linkEditorOpen ? (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 p-4 backdrop-blur-[2px] sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="link-editor-title"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeLinkEditor();
+          }}
+        >
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              saveLink();
+            }}
+            className="w-full max-w-xl rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_30px_100px_rgba(0,0,0,0.24)] sm:p-7"
+          >
+            <div className="flex items-start justify-between gap-5">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-[#039147]">
+                  Rich Text Link
+                </p>
+                <h3
+                  id="link-editor-title"
+                  className="mt-2 text-2xl font-black tracking-tight text-black"
+                >
+                  Insert Link
+                </h3>
+                <p className="mt-2 text-sm font-semibold leading-6 text-black/45">
+                  Connect selected text to a PML page or an external website.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeLinkEditor}
+                aria-label="Close link editor"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white text-lg font-black text-black/45 transition hover:border-black/20 hover:bg-black/[0.03] hover:text-black"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-[#039147]/10 bg-[#f2faf5] p-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#039147]">
+                Selected Text
+              </p>
+              <p className="mt-2 break-words text-sm font-black leading-6 text-black">
+                {linkPreviewText || "No text selected"}
+              </p>
+            </div>
+
+            <label className="mt-5 block">
+              <span className="text-sm font-black text-black">Link URL</span>
+              <input
+                type="text"
+                value={linkUrl}
+                onChange={(event) => {
+                  setLinkUrl(event.target.value);
+                  setLinkError("");
+                }}
+                autoFocus
+                placeholder="/services/clinical-trial or https://example.com"
+                aria-invalid={Boolean(linkError)}
+                aria-describedby={linkError ? "link-editor-error" : undefined}
+                className={`mt-2 w-full rounded-2xl border bg-white px-4 py-3.5 text-sm font-semibold text-black outline-none transition placeholder:text-black/30 ${
+                  linkError
+                    ? "border-red-300 ring-4 ring-red-50"
+                    : "border-black/10 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+                }`}
+              />
+            </label>
+
+            <label className="mt-4 flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-black/5 bg-[#fafcfb] p-4">
+              <span>
+                <span className="block text-sm font-black text-black">
+                  Open in new tab
+                </span>
+                <span className="mt-1 block text-xs font-semibold leading-5 text-black/40">
+                  Recommended for links to external websites.
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                checked={linkOpenInNewTab}
+                onChange={(event) =>
+                  setLinkOpenInNewTab(event.target.checked)
+                }
+                className="h-5 w-5 shrink-0 accent-[#039147]"
+              />
+            </label>
+
+            {linkError ? (
+              <p
+                id="link-editor-error"
+                className="mt-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold leading-5 text-red-700"
+              >
+                {linkError}
+              </p>
+            ) : null}
+
+            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeLinkEditor}
+                className="rounded-full border border-black/10 bg-white px-6 py-3 text-sm font-black text-black/60 transition hover:border-black/20 hover:bg-black/[0.03] hover:text-black"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!linkPreviewText}
+                className="rounded-full bg-[#039147] px-7 py-3 text-sm font-black text-white shadow-[0_16px_40px_rgba(3,145,71,0.24)] transition hover:-translate-y-0.5 hover:bg-[#027a3c] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0"
+              >
+                Insert Link
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+    </>
   );
 }
