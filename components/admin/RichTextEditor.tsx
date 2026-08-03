@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
@@ -135,6 +135,8 @@ export default function RichTextEditor({
     to: number;
   } | null>(null);
   const [linkError, setLinkError] = useState("");
+  const [linkSuccessVisible, setLinkSuccessVisible] = useState(false);
+  const linkSuccessTimeoutRef = useRef<number | null>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -188,6 +190,14 @@ export default function RichTextEditor({
       editor.commands.setContent(nextHtml, { emitUpdate: false });
     }
   }, [editor, value]);
+
+  useEffect(() => {
+    return () => {
+      if (linkSuccessTimeoutRef.current !== null) {
+        window.clearTimeout(linkSuccessTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const wordCount = useMemo(() => {
     if (!editor) return 0;
@@ -276,6 +286,18 @@ export default function RichTextEditor({
     return /^(https?:\/\/|mailto:|tel:)/i.test(url);
   };
 
+  const showLinkSuccess = () => {
+    if (linkSuccessTimeoutRef.current !== null) {
+      window.clearTimeout(linkSuccessTimeoutRef.current);
+    }
+
+    setLinkSuccessVisible(true);
+    linkSuccessTimeoutRef.current = window.setTimeout(() => {
+      setLinkSuccessVisible(false);
+      linkSuccessTimeoutRef.current = null;
+    }, 2500);
+  };
+
   const saveLink = () => {
     const normalizedUrl = linkUrl.trim();
 
@@ -296,7 +318,7 @@ export default function RichTextEditor({
       return;
     }
 
-    editor
+    const linkInserted = editor
       .chain()
       .focus()
       .setTextSelection(linkSelection)
@@ -307,8 +329,14 @@ export default function RichTextEditor({
       })
       .run();
 
+    if (!linkInserted) {
+      setLinkError("Unable to insert the link. Please try again.");
+      return;
+    }
+
     setLinkEditorOpen(false);
     setLinkError("");
+    showLinkSuccess();
   };
 
   return (
@@ -433,6 +461,24 @@ export default function RichTextEditor({
           </div>
         </div>
       </div>
+
+      {linkSuccessVisible ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mx-4 mt-4 flex items-center gap-3 rounded-2xl border border-[#039147]/15 bg-[#eaf8f0] px-4 py-3 text-[#027a3c] shadow-[0_12px_32px_rgba(3,145,71,0.10)] sm:mx-5"
+        >
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#039147] text-xs font-black text-white">
+            ✓
+          </span>
+          <div>
+            <p className="text-sm font-black">Link inserted successfully</p>
+            <p className="mt-0.5 text-xs font-semibold text-[#027a3c]/70">
+              Click Save Insight when you are ready to save the article.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       <EditorContent editor={editor} />
 
