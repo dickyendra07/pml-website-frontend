@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
@@ -516,21 +517,18 @@ export default function RichTextEditor({
         </div>
       </div>
 
-      {linkEditorOpen ? (
-        <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 p-4 backdrop-blur-[2px] sm:p-6"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="link-editor-title"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) closeLinkEditor();
-          }}
-        >
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              saveLink();
+      {linkEditorOpen
+        ? createPortal(
+          <div
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 p-4 backdrop-blur-[2px] sm:p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="link-editor-title"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) closeLinkEditor();
             }}
+          >
+            <div
             className="w-full max-w-xl rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_30px_100px_rgba(0,0,0,0.24)] sm:p-7"
           >
             <div className="flex items-start justify-between gap-5">
@@ -576,6 +574,13 @@ export default function RichTextEditor({
                 onChange={(event) => {
                   setLinkUrl(event.target.value);
                   setLinkError("");
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    saveLink();
+                  }
                 }}
                 autoFocus
                 placeholder="/services/clinical-trial or https://example.com"
@@ -626,16 +631,23 @@ export default function RichTextEditor({
                 Cancel
               </button>
               <button
-                type="submit"
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  saveLink();
+                }}
                 disabled={!linkPreviewText}
                 className="rounded-full bg-[#039147] px-7 py-3 text-sm font-black text-white shadow-[0_16px_40px_rgba(3,145,71,0.24)] transition hover:-translate-y-0.5 hover:bg-[#027a3c] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0"
               >
                 Insert Link
               </button>
             </div>
-          </form>
-        </div>
-      ) : null}
+            </div>
+          </div>,
+          document.body,
+        )
+        : null}
     </>
   );
 }
