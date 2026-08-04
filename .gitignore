@@ -13,3 +13,5 @@ components/admin/FacilityGalleryManager.before-grid-ui.tsx
 *.before-gallery-ui.tsx
 *.before-thumbnail-ui.tsx
 app/layout.before-gtm.tsx
+.vercel
+.env*
