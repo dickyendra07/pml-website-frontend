@@ -981,6 +981,21 @@ export default function AdminInsightsPage() {
                   </button>
                 ) : null}
 
+                {form.slugId || form.slugEn ? (
+                  <a
+                    href={
+                      form.slugId
+                        ? `/id/insight/${form.category}/${form.slugId}`
+                        : `/en/insight/${form.category}/${form.slugEn}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full border border-[#039147]/20 bg-white px-8 py-4 text-sm font-black text-[#039147] transition hover:-translate-y-0.5 hover:bg-[#eaf8f0]"
+                  >
+                    View Public Page ↗
+                  </a>
+                ) : null}
+
                 <button
                   type="submit"
                   disabled={saving}
