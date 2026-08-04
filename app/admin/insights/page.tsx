@@ -134,6 +134,17 @@ function parseTags(value: string) {
     .filter(Boolean);
 }
 
+function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export default function AdminInsightsPage() {
   const [items, setItems] = useState<AdminInsightItem[]>([]);
   const [form, setForm] = useState<InsightForm>(emptyForm);
@@ -144,6 +155,8 @@ export default function AdminInsightsPage() {
   const [message, setMessage] = useState("");
   const [isWritingMode, setIsWritingMode] = useState(false);
   const [activeLanguage, setActiveLanguage] = useState<"en" | "id">("en");
+  const [slugEnManuallyEdited, setSlugEnManuallyEdited] = useState(true);
+  const [slugIdManuallyEdited, setSlugIdManuallyEdited] = useState(true);
 
   const selectedInsight = useMemo(() => {
     return items.find((item) => item.id === form.id) || null;
@@ -200,11 +213,15 @@ export default function AdminInsightsPage() {
 
   const resetForm = () => {
     setForm(emptyForm);
+    setSlugEnManuallyEdited(false);
+    setSlugIdManuallyEdited(false);
     setMessage("");
   };
 
   const selectInsight = (item: AdminInsightItem) => {
     setForm(mapInsightToForm(item));
+    setSlugEnManuallyEdited(true);
+    setSlugIdManuallyEdited(true);
     setActiveLanguage(item.titleEn ? "en" : "id");
     setMessage("");
   };
@@ -289,10 +306,14 @@ export default function AdminInsightsPage() {
       if (form.id) {
         const updated = await updateAdminInsight(token, form.id, payload);
         setForm(mapInsightToForm(updated));
+        setSlugEnManuallyEdited(true);
+        setSlugIdManuallyEdited(true);
         setMessage("Insight updated successfully.");
       } else {
         const created = await createAdminInsight(token, payload);
         setForm(mapInsightToForm(created));
+        setSlugEnManuallyEdited(true);
+        setSlugIdManuallyEdited(true);
         setMessage("Insight created successfully.");
       }
 
@@ -546,30 +567,58 @@ export default function AdminInsightsPage() {
                       </span>
                       <input
                         value={form.titleEn}
-                        onChange={(event) =>
-                          updateField("titleEn", event.target.value)
-                        }
+                        onChange={(event) => {
+                          const value = event.target.value;
+
+                          setForm((current) => ({
+                            ...current,
+                            titleEn: value,
+                            slugEn: slugEnManuallyEdited
+                              ? current.slugEn
+                              : slugify(value),
+                          }));
+                        }}
                         className="h-14 rounded-2xl border border-black/5 bg-white px-5 text-base font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
                         placeholder="Enter the English article title"
                       />
                     </label>
 
-                    <label className="grid gap-2 md:col-span-2">
-                      <span className="text-sm font-black text-black">
-                        English URL Slug
-                      </span>
+                    <div className="grid gap-2 md:col-span-2">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <label
+                          htmlFor="insight-slug-en"
+                          className="text-sm font-black text-black"
+                        >
+                          English URL Slug
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateField("slugEn", slugify(form.titleEn));
+                            setSlugEnManuallyEdited(false);
+                          }}
+                          className="rounded-full border border-[#039147]/20 bg-[#f4fbf7] px-4 py-2 text-xs font-black text-[#039147] transition hover:border-[#039147] hover:bg-[#039147] hover:text-white"
+                        >
+                          Generate from Title
+                        </button>
+                      </div>
+
                       <input
+                        id="insight-slug-en"
                         value={form.slugEn}
-                        onChange={(event) =>
-                          updateField("slugEn", event.target.value)
-                        }
+                        onChange={(event) => {
+                          setSlugEnManuallyEdited(true);
+                          updateField("slugEn", slugify(event.target.value));
+                        }}
                         className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
                         placeholder="english-article-slug"
                       />
+
                       <span className="text-xs font-semibold text-black/40">
-                        Leave blank to generate it from the English title.
+                        Automatically generated from the title and still editable manually.
                       </span>
-                    </label>
+                    </div>
 
                     <label className="grid gap-2 md:col-span-2">
                       <span className="text-sm font-black text-black">
@@ -687,30 +736,58 @@ export default function AdminInsightsPage() {
                       </span>
                       <input
                         value={form.titleId}
-                        onChange={(event) =>
-                          updateField("titleId", event.target.value)
-                        }
+                        onChange={(event) => {
+                          const value = event.target.value;
+
+                          setForm((current) => ({
+                            ...current,
+                            titleId: value,
+                            slugId: slugIdManuallyEdited
+                              ? current.slugId
+                              : slugify(value),
+                          }));
+                        }}
                         className="h-14 rounded-2xl border border-black/5 bg-white px-5 text-base font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
                         placeholder="Masukkan judul artikel Bahasa Indonesia"
                       />
                     </label>
 
-                    <label className="grid gap-2 md:col-span-2">
-                      <span className="text-sm font-black text-black">
-                        Slug URL Indonesia
-                      </span>
+                    <div className="grid gap-2 md:col-span-2">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <label
+                          htmlFor="insight-slug-id"
+                          className="text-sm font-black text-black"
+                        >
+                          Slug URL Indonesia
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateField("slugId", slugify(form.titleId));
+                            setSlugIdManuallyEdited(false);
+                          }}
+                          className="rounded-full border border-[#039147]/20 bg-[#f4fbf7] px-4 py-2 text-xs font-black text-[#039147] transition hover:border-[#039147] hover:bg-[#039147] hover:text-white"
+                        >
+                          Buat dari Judul
+                        </button>
+                      </div>
+
                       <input
+                        id="insight-slug-id"
                         value={form.slugId}
-                        onChange={(event) =>
-                          updateField("slugId", event.target.value)
-                        }
+                        onChange={(event) => {
+                          setSlugIdManuallyEdited(true);
+                          updateField("slugId", slugify(event.target.value));
+                        }}
                         className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
                         placeholder="slug-artikel-indonesia"
                       />
+
                       <span className="text-xs font-semibold text-black/40">
-                        Kosongkan untuk membuat slug otomatis dari judul.
+                        Dibuat otomatis dari judul dan tetap dapat diedit secara manual.
                       </span>
-                    </label>
+                    </div>
 
                     <label className="grid gap-2 md:col-span-2">
                       <span className="text-sm font-black text-black">
