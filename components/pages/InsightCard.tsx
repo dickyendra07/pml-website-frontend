@@ -79,9 +79,15 @@ export default function InsightCard({
   const isUploadImage =
     image.startsWith("http://localhost") || image.includes("/uploads/");
 
+  const articleHref = localizeHref(
+    `/insight/${category}/${item.slug}`,
+    locale,
+  );
+
   return (
-    <article
-      className={`group overflow-hidden border border-black/5 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_80px_rgba(0,0,0,0.12)] ${
+    <Link
+      href={articleHref}
+      className={`group block overflow-hidden border border-black/5 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px-80px_rgba(0,0,0,0.12)] ${
         featured
           ? "rounded-[30px] md:rounded-[38px]"
           : "w-[82vw] max-w-[340px] shrink-0 snap-start rounded-[28px] md:w-auto md:max-w-none md:rounded-[32px]"
@@ -135,17 +141,13 @@ export default function InsightCard({
           {getExcerpt(item)}
         </p>
 
-        <Link
-          href={localizeHref(
-            `/insight/${category}/${item.slug}`,
-            locale,
-          )}
+        <span
           className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#eaf8f0] px-5 py-3 text-sm font-extrabold text-[#039147] transition group-hover:bg-[#039147] group-hover:text-white"
         >
           {isIndonesian ? "Baca selengkapnya" : "Read more"}
           <span className="transition group-hover:translate-x-1">→</span>
-        </Link>
+        </span>
       </div>
-    </article>
+    </Link>
   );
 }
