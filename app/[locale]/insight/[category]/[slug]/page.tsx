@@ -170,7 +170,7 @@ export default async function InsightDetailPage({
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_320px]">
 
 
-          <article className="max-w-3xl">
+          <article className="max-w-none">
 
             <div className="mb-10 flex flex-wrap gap-3">
               {data.tags.map((tag) => (
