@@ -440,7 +440,7 @@ export default function MediaPicker({
   };
 
   const currentFilename = currentSelection
-    ? currentSelection.item.originalName || currentSelection.item.filename
+    ? currentSelection.item.filename || currentSelection.item.originalName
     : filenameFromUrl(value);
   const currentDetails = currentSelection
     ? getVariantDetails(currentSelection.item, currentSelection.variant)
@@ -808,7 +808,7 @@ export default function MediaPicker({
                                 </div>
                                 <div className="p-4">
                                   <p className="line-clamp-1 text-sm font-black text-black">
-                                    {item.originalName || item.filename}
+                                    {item.filename || item.originalName}
                                   </p>
                                   <p className="mt-2 text-[11px] font-semibold text-black/40">
                                     {formatBytes(item.size)} · {formatDate(item.createdAt)}
@@ -863,7 +863,7 @@ export default function MediaPicker({
                         </div>
 
                         <p className="mt-4 break-words text-sm font-black text-black">
-                          {selectedItem.originalName || selectedItem.filename}
+                          {selectedItem.filename || selectedItem.originalName}
                         </p>
                         <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                           <div className="rounded-2xl bg-white p-3">
@@ -891,6 +891,68 @@ export default function MediaPicker({
                             <p className="mt-1 font-black text-black">
                               {formatDate(selectedItem.createdAt)}
                             </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-5 rounded-[24px] border border-black/5 bg-white p-4">
+                          <p className="text-xs font-black uppercase tracking-[0.12em] text-[#039147]">
+                            Asset Metadata
+                          </p>
+
+                          <div className="mt-3 space-y-3 text-xs">
+                            <div>
+                              <p className="font-semibold text-black/35">
+                                Filename
+                              </p>
+                              <p className="mt-1 break-words font-black text-black">
+                                {selectedItem.filename || selectedItem.originalName}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="font-semibold text-black/35">
+                                Title
+                              </p>
+                              <p className="mt-1 break-words font-black text-black">
+                                {selectedItem.title || "-"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="font-semibold text-black/35">
+                                Alt Text
+                              </p>
+                              <p className="mt-1 break-words font-black text-black">
+                                {selectedItem.altText || "-"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="font-semibold text-black/35">
+                                Description
+                              </p>
+                              <p className="mt-1 break-words font-black text-black">
+                                {selectedItem.description || "-"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="font-semibold text-black/35">
+                                Caption
+                              </p>
+                              <p className="mt-1 break-words font-black text-black">
+                                {selectedItem.caption || "-"}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="font-semibold text-black/35">
+                                Tags
+                              </p>
+                              <p className="mt-1 break-words font-black text-black">
+                                {(selectedItem.tags || []).join(", ") || "-"}
+                              </p>
+                            </div>
                           </div>
                         </div>
 
