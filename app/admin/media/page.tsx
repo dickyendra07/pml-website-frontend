@@ -370,7 +370,7 @@ export default function AdminMediaPage() {
     if (!selectedMedia) return;
 
     setRenameValue(
-      selectedMedia.originalName || selectedMedia.filename,
+      selectedMedia.filename || selectedMedia.originalName || "",
     );
 
     setIsRenaming(true);
@@ -1143,7 +1143,7 @@ export default function AdminMediaPage() {
                       <div className="mt-3 flex items-center justify-between gap-3">
 
                         <p className="min-w-0 flex-1 break-all text-sm font-black text-black">
-                          {selectedMedia.originalName || selectedMedia.filename}
+                          {selectedMedia.filename || selectedMedia.originalName}
                         </p>
 
                         <button
@@ -1231,8 +1231,8 @@ export default function AdminMediaPage() {
 
                     <div className="p-4">
                       <p className="break-all text-sm font-black text-black">
-                        {selectedMedia.originalName ||
-                          selectedMedia.filename}
+                        {selectedMedia.filename ||
+                          selectedMedia.originalName}
                       </p>
 
                       <p className="mt-2 break-all text-xs leading-5 text-black/40">
