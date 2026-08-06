@@ -960,7 +960,7 @@ export default function AdminMediaPage() {
                             {item.type === "IMAGE" ? (
                               <Image
                                 src={getAssetUrl(item.url)}
-                                alt={item.altText || item.originalName || item.filename}
+                                alt={item.altText || item.filename || item.originalName || ""}
                                 fill
                                 sizes="320px"
                                 className={`transition duration-500 group-hover:scale-105 ${
@@ -1020,7 +1020,7 @@ export default function AdminMediaPage() {
 
                           <div className="space-y-2 p-4">
                             <p className="line-clamp-2 min-h-[42px] break-all text-sm font-black leading-5 text-black">
-                              {item.originalName || item.filename}
+                              {item.filename || item.originalName}
                             </p>
 
                             <div className="flex flex-wrap gap-2">
@@ -1066,7 +1066,7 @@ export default function AdminMediaPage() {
                             {item.type === "IMAGE" ? (
                               <Image
                                 src={getAssetUrl(item.url)}
-                                alt={item.altText || item.originalName || item.filename}
+                                alt={item.altText || item.filename || item.originalName || ""}
                                 fill
                                 sizes="64px"
                                 className="object-cover"
@@ -1080,7 +1080,7 @@ export default function AdminMediaPage() {
                           </div>
 
                           <span className="line-clamp-2 text-sm font-black text-black">
-                            {item.originalName || item.filename}
+                            {item.filename || item.originalName}
                           </span>
 
                           <span className="text-xs font-bold text-black/50">
