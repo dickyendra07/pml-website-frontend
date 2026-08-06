@@ -20,6 +20,7 @@ import {
   cropAdminMediaAsset,
   getAdminMediaAssets,
   getAdminToken,
+  updateAdminMediaAsset,
   uploadAdminMediaAsset,
 } from "@/lib/admin-api";
 import {
@@ -196,6 +197,16 @@ export default function MediaPicker({
   const [failedModalUrl, setFailedModalUrl] = useState("");
   const [failedAssetIds, setFailedAssetIds] = useState<string[]>([]);
   const [metadataOpen, setMetadataOpen] = useState(false);
+  const [editingMetadata, setEditingMetadata] = useState(false);
+  const [savingMetadata, setSavingMetadata] = useState(false);
+
+  const [metadataForm, setMetadataForm] = useState({
+    title: "",
+    altText: "",
+    description: "",
+    caption: "",
+    tags: "",
+  });
 
   const imageUrl = resolveMediaUrl(value);
   const imageUnavailable = Boolean(imageUrl && failedImageUrl === imageUrl);
@@ -336,8 +347,68 @@ export default function MediaPicker({
     setSearch("");
     setActiveFolder("all");
     setFailedModalUrl("");
+    setEditingMetadata(false);
     onDismiss?.();
   };
+
+
+  const startMetadataEdit = () => {
+    if (!selectedItem) return;
+
+    setMetadataForm({
+      title: selectedItem.title || "",
+      altText: selectedItem.altText || "",
+      description: selectedItem.description || "",
+      caption: selectedItem.caption || "",
+      tags: (selectedItem.tags || []).join(", "),
+    });
+
+    setEditingMetadata(true);
+  };
+
+
+  const saveMetadataEdit = async () => {
+    if (!selectedItem) return;
+
+    const token = getAdminToken();
+
+    if (!token) {
+      setErrorMessage("Your admin session has expired. Please sign in again.");
+      return;
+    }
+
+    setSavingMetadata(true);
+
+    try {
+      const updated = await updateAdminMediaAsset(
+        token,
+        selectedItem.id,
+        {
+          title: metadataForm.title,
+          altText: metadataForm.altText,
+          description: metadataForm.description,
+          caption: metadataForm.caption,
+          tags: metadataForm.tags
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+        },
+      );
+
+      setSelectedItem(updated);
+      setEditingMetadata(false);
+      setMessage("Metadata updated successfully.");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to update metadata.",
+      );
+    } finally {
+      setSavingMetadata(false);
+    }
+  };
+
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
@@ -896,76 +967,123 @@ export default function MediaPicker({
                         </div>
 
                         <div className="mt-5 rounded-[24px] border border-black/5 bg-white p-4">
-                          <button
-                            type="button"
-                            onClick={() => setMetadataOpen((current) => !current)}
-                            className="flex w-full items-center justify-between gap-3 text-left"
-                          >
-                            <span className="text-xs font-black uppercase tracking-[0.12em] text-[#039147]">
-                              Asset Metadata
-                            </span>
+                          <div className="flex items-center justify-between gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setMetadataOpen((current) => !current)}
+                              className="flex items-center gap-3 text-left"
+                            >
+                              <span className="text-xs font-black uppercase tracking-[0.12em] text-[#039147]">
+                                Asset Metadata
+                              </span>
 
-                            <span className="text-xs font-black text-black/40">
-                              {metadataOpen ? "−" : "+"}
-                            </span>
-                          </button>
+                              <span className="text-xs font-black text-black/40">
+                                {metadataOpen ? "−" : "+"}
+                              </span>
+                            </button>
+
+                            {metadataOpen && !editingMetadata ? (
+                              <button
+                                type="button"
+                                onClick={startMetadataEdit}
+                                className="rounded-full border border-black/10 px-4 py-2 text-[11px] font-black transition hover:border-[#039147] hover:text-[#039147]"
+                              >
+                                Edit Metadata
+                              </button>
+                            ) : null}
+                          </div>
 
                           {metadataOpen ? (
-                          <div className="mt-3 space-y-3 text-xs">
-                            <div>
-                              <p className="font-semibold text-black/35">
-                                Filename
-                              </p>
-                              <p className="mt-1 break-words font-black text-black">
-                                {selectedItem.filename || selectedItem.originalName}
-                              </p>
-                            </div>
+                            editingMetadata ? (
+                              <div className="mt-4 space-y-3">
+                                {[
+                                  ["title", "Title"],
+                                  ["altText", "Alt Text"],
+                                  ["caption", "Caption"],
+                                  ["tags", "Tags"],
+                                ].map(([key, label]) => (
+                                  <div key={key}>
+                                    <p className="mb-1 text-xs font-bold text-black/40">
+                                      {label}
+                                    </p>
+                                    <input
+                                      value={metadataForm[key as keyof typeof metadataForm]}
+                                      onChange={(event) =>
+                                        setMetadataForm((current) => ({
+                                          ...current,
+                                          [key]: event.target.value,
+                                        }))
+                                      }
+                                      className="h-10 w-full rounded-xl border border-black/10 px-3 text-sm font-bold outline-none focus:border-[#039147]"
+                                    />
+                                  </div>
+                                ))}
 
-                            <div>
-                              <p className="font-semibold text-black/35">
-                                Title
-                              </p>
-                              <p className="mt-1 break-words font-black text-black">
-                                {selectedItem.title || "-"}
-                              </p>
-                            </div>
+                                <div>
+                                  <p className="mb-1 text-xs font-bold text-black/40">
+                                    Description
+                                  </p>
+                                  <textarea
+                                    value={metadataForm.description}
+                                    onChange={(event) =>
+                                      setMetadataForm((current) => ({
+                                        ...current,
+                                        description: event.target.value,
+                                      }))
+                                    }
+                                    rows={3}
+                                    className="w-full rounded-xl border border-black/10 px-3 py-2 text-sm font-bold outline-none focus:border-[#039147]"
+                                  />
+                                </div>
 
-                            <div>
-                              <p className="font-semibold text-black/35">
-                                Alt Text
-                              </p>
-                              <p className="mt-1 break-words font-black text-black">
-                                {selectedItem.altText || "-"}
-                              </p>
-                            </div>
+                                <div className="flex gap-2 pt-2">
+                                  <button
+                                    type="button"
+                                    onClick={saveMetadataEdit}
+                                    disabled={savingMetadata}
+                                    className="rounded-full bg-[#039147] px-5 py-2 text-xs font-black text-white"
+                                  >
+                                    {savingMetadata ? "Saving..." : "Save"}
+                                  </button>
 
-                            <div>
-                              <p className="font-semibold text-black/35">
-                                Description
-                              </p>
-                              <p className="mt-1 break-words font-black text-black">
-                                {selectedItem.description || "-"}
-                              </p>
-                            </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingMetadata(false)}
+                                    className="rounded-full border border-black/10 px-5 py-2 text-xs font-black"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="mt-4 space-y-3 text-xs">
+                                <div>
+                                  <p className="font-semibold text-black/35">
+                                    Filename
+                                  </p>
+                                  <p className="mt-1 break-words font-black text-black">
+                                    {selectedItem.filename || selectedItem.originalName}
+                                  </p>
+                                </div>
 
-                            <div>
-                              <p className="font-semibold text-black/35">
-                                Caption
-                              </p>
-                              <p className="mt-1 break-words font-black text-black">
-                                {selectedItem.caption || "-"}
-                              </p>
-                            </div>
-
-                            <div>
-                              <p className="font-semibold text-black/35">
-                                Tags
-                              </p>
-                              <p className="mt-1 break-words font-black text-black">
-                                {(selectedItem.tags || []).join(", ") || "-"}
-                              </p>
-                            </div>
-                          </div>
+                                {[
+                                  ["Title", selectedItem.title],
+                                  ["Alt Text", selectedItem.altText],
+                                  ["Description", selectedItem.description],
+                                  ["Caption", selectedItem.caption],
+                                  ["Tags", (selectedItem.tags || []).join(", ")],
+                                ].map(([label, value]) => (
+                                  <div key={label}>
+                                    <p className="font-semibold text-black/35">
+                                      {label}
+                                    </p>
+                                    <p className="mt-1 break-words font-black text-black">
+                                      {value || "-"}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            )
                           ) : null}
                         </div>
 
