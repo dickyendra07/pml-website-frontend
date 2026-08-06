@@ -195,6 +195,7 @@ export default function MediaPicker({
   const [failedImageUrl, setFailedImageUrl] = useState("");
   const [failedModalUrl, setFailedModalUrl] = useState("");
   const [failedAssetIds, setFailedAssetIds] = useState<string[]>([]);
+  const [metadataOpen, setMetadataOpen] = useState(false);
 
   const imageUrl = resolveMediaUrl(value);
   const imageUnavailable = Boolean(imageUrl && failedImageUrl === imageUrl);
@@ -895,10 +896,21 @@ export default function MediaPicker({
                         </div>
 
                         <div className="mt-5 rounded-[24px] border border-black/5 bg-white p-4">
-                          <p className="text-xs font-black uppercase tracking-[0.12em] text-[#039147]">
-                            Asset Metadata
-                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setMetadataOpen((current) => !current)}
+                            className="flex w-full items-center justify-between gap-3 text-left"
+                          >
+                            <span className="text-xs font-black uppercase tracking-[0.12em] text-[#039147]">
+                              Asset Metadata
+                            </span>
 
+                            <span className="text-xs font-black text-black/40">
+                              {metadataOpen ? "−" : "+"}
+                            </span>
+                          </button>
+
+                          {metadataOpen ? (
                           <div className="mt-3 space-y-3 text-xs">
                             <div>
                               <p className="font-semibold text-black/35">
@@ -954,6 +966,7 @@ export default function MediaPicker({
                               </p>
                             </div>
                           </div>
+                          ) : null}
                         </div>
 
                         <div className="mt-5">
