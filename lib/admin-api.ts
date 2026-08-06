@@ -849,8 +849,11 @@ export type MediaAssetItem = {
 
   type: MediaAssetType;
 
+  title: string | null;
   altText: string | null;
+  description: string | null;
   caption: string | null;
+  tags: string[];
 
   folder: string | null;
 
@@ -862,8 +865,11 @@ export type MediaAssetItem = {
 
 export type MediaAssetPayload = {
   filename?: string;
+  title?: string | null;
   altText?: string | null;
+  description?: string | null;
   caption?: string | null;
+  tags?: string[];
   folder?: string | null;
   type?: MediaAssetType;
 };

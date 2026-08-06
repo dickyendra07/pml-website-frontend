@@ -29,8 +29,11 @@ import {
 
 type MediaForm = {
   id: string;
+  title: string;
   altText: string;
+  description: string;
   caption: string;
+  tags: string;
   folder: string;
   type: MediaAssetType;
 };
@@ -44,8 +47,11 @@ type UploadQueueItem = {
 
 const emptyForm: MediaForm = {
   id: "",
+  title: "",
   altText: "",
+  description: "",
   caption: "",
+  tags: "",
   folder: "general",
   type: "OTHER",
 };
@@ -82,8 +88,11 @@ function formatDate(value?: string | null) {
 function mapMediaToForm(item: MediaAssetItem): MediaForm {
   return {
     id: item.id,
+    title: item.title || "",
     altText: item.altText || "",
+    description: item.description || "",
     caption: item.caption || "",
+    tags: (item.tags || []).join(", "),
     folder: item.folder || "general",
     type: item.type,
   };
@@ -523,16 +532,28 @@ export default function AdminMediaPage() {
     setMessage("");
 
     try {
+      const payload = {
+        title: form.title.trim() || null,
+        altText: form.altText.trim() || null,
+        description: form.description.trim() || null,
+        caption: form.caption.trim() || null,
+        tags: form.tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+        folder: form.folder.trim() || "general",
+        type: form.type,
+      };
+
+      console.log("MEDIA SAVE PAYLOAD:", payload);
+
       const updated = await updateAdminMediaAsset(
         token,
         form.id,
-        {
-          altText: form.altText.trim() || null,
-          caption: form.caption.trim() || null,
-          folder: form.folder.trim() || "general",
-          type: form.type,
-        },
+        payload,
       );
+
+      console.log("MEDIA SAVE RESPONSE:", updated);
 
       setForm(mapMediaToForm(updated));
       setMessageTone("success");
@@ -1441,6 +1462,24 @@ export default function AdminMediaPage() {
                   >
                     <label className="grid gap-2">
                       <span className="text-sm font-black text-black">
+                        Title
+                      </span>
+
+                      <input
+                        value={form.title}
+                        onChange={(event) =>
+                          updateField(
+                            "title",
+                            event.target.value,
+                          )
+                        }
+                        placeholder="SEO title for this media asset"
+                        className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm font-bold text-black outline-none placeholder:text-black/25 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+                      />
+                    </label>
+
+                    <label className="grid gap-2">
+                      <span className="text-sm font-black text-black">
                         Alt Text
                       </span>
 
@@ -1454,6 +1493,25 @@ export default function AdminMediaPage() {
                         }
                         placeholder="Describe the image for accessibility"
                         className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm font-bold text-black outline-none placeholder:text-black/25 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+                      />
+                    </label>
+
+                    <label className="grid gap-2">
+                      <span className="text-sm font-black text-black">
+                        Description
+                      </span>
+
+                      <textarea
+                        rows={5}
+                        value={form.description}
+                        onChange={(event) =>
+                          updateField(
+                            "description",
+                            event.target.value,
+                          )
+                        }
+                        placeholder="Describe this media asset for SEO and content context"
+                        className="resize-y rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-semibold leading-6 text-black outline-none placeholder:text-black/25 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
                       />
                     </label>
 
@@ -1473,6 +1531,24 @@ export default function AdminMediaPage() {
                         }
                         placeholder="Optional media caption"
                         className="resize-y rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-semibold leading-6 text-black outline-none placeholder:text-black/25 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+                      />
+                    </label>
+
+                    <label className="grid gap-2">
+                      <span className="text-sm font-black text-black">
+                        Tags
+                      </span>
+
+                      <input
+                        value={form.tags}
+                        onChange={(event) =>
+                          updateField(
+                            "tags",
+                            event.target.value,
+                          )
+                        }
+                        placeholder="laboratory, clinical research, facility"
+                        className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm font-bold text-black outline-none placeholder:text-black/25 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
                       />
                     </label>
 
