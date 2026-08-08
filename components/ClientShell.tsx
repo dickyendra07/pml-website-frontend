@@ -12,6 +12,8 @@ type ClientShellProps = {
   locale: Locale;
 };
 
+const PUBLIC_LOCALE_PATH = /^\/(en|id)(?:\/|$)/;
+
 export default function ClientShell({ children, locale }: ClientShellProps) {
   const [proposalOpen, setProposalOpen] = useState(false);
 
@@ -22,6 +24,71 @@ export default function ClientShell({ children, locale }: ClientShellProps) {
 
     return () => {
       window.removeEventListener("open-proposal-modal", openProposal);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleDocumentNavigation = (event: MouseEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      const target = event.target;
+
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      const anchor = target.closest<HTMLAnchorElement>("a[href]");
+
+      if (
+        !anchor ||
+        anchor.hasAttribute("download") ||
+        (anchor.target && anchor.target.toLowerCase() !== "_self")
+      ) {
+        return;
+      }
+
+      const href = anchor.getAttribute("href");
+
+      if (!href || href.startsWith("#")) {
+        return;
+      }
+
+      const destination = new URL(anchor.href, window.location.href);
+
+      if (
+        destination.origin !== window.location.origin ||
+        !PUBLIC_LOCALE_PATH.test(destination.pathname)
+      ) {
+        return;
+      }
+
+      const currentUrl = new URL(window.location.href);
+      const isSameDocument =
+        destination.pathname === currentUrl.pathname &&
+        destination.search === currentUrl.search;
+
+      if (isSameDocument) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      window.location.assign(destination.href);
+    };
+
+    document.addEventListener("click", handleDocumentNavigation, true);
+
+    return () => {
+      document.removeEventListener("click", handleDocumentNavigation, true);
     };
   }, []);
 
