@@ -2,16 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import InsightCard from "@/components/pages/InsightCard";
 import { type InsightCategory, insightCategories } from "@/data/insights";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 import { getInsights, type InsightItem } from "@/lib/api";
 
 type InsightCategoryTemplateProps = {
   category: InsightCategory;
+  locale: Locale;
 };
 
 const mockFaqItems = [
@@ -153,9 +154,8 @@ const categoryLabelId: Record<InsightCategory, string> = {
 
 export default function InsightCategoryTemplate({
   category,
+  locale,
 }: InsightCategoryTemplateProps) {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>
@@ -393,7 +393,7 @@ export default function InsightCategoryTemplate({
               <>
                 <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-5 md:mx-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-3">
                   {items.map((item) => (
-                    <InsightCard key={item.slug} item={item} />
+                    <InsightCard key={item.slug} item={item} locale={locale} />
                   ))}
                 </div>
 

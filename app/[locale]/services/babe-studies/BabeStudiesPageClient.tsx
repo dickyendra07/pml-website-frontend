@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import OtherServices from "@/components/OtherServices";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 const heroSlides = [
   "/images/pml/services/babe-studies-hero.png",
@@ -313,9 +313,11 @@ function ShieldIcon() {
   );
 }
 
-export default function BabeStudiesPage() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type BabeStudiesPageProps = {
+  locale: Locale;
+};
+
+export default function BabeStudiesPage({ locale }: BabeStudiesPageProps) {
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>
@@ -911,7 +913,7 @@ export default function BabeStudiesPage() {
         </div>
       </section>
 
-      <OtherServices current="babe" />
+      <OtherServices current="babe" locale={locale} />
 
       <section className="bg-white pb-20 md:pb-32">
         <div className="pml-container">

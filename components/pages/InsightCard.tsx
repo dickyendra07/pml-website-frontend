@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 import { InsightItem as StaticInsightItem } from "@/data/insights";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 import { InsightItem as ApiInsightItem } from "@/lib/api";
 import { resolveMediaUrl } from "@/lib/media";
 
@@ -12,6 +12,7 @@ type InsightCardItem = StaticInsightItem | ApiInsightItem;
 type InsightCardProps = {
   item: InsightCardItem;
   featured?: boolean;
+  locale: Locale;
 };
 
 const categoryLabelEn: Record<string, string> = {
@@ -68,9 +69,8 @@ function getReadTime(item: InsightCardItem, isIndonesian: boolean) {
 export default function InsightCard({
   item,
   featured = false,
+  locale,
 }: InsightCardProps) {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
   const isIndonesian = locale === "id";
 
   const category = item.category;

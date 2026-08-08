@@ -1,19 +1,25 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 
-import { getLocaleFromPathname } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
-export default function DocumentLanguage() {
-  const pathname = usePathname();
+type DocumentLanguageProps = {
+  locale: Locale;
+};
 
-  useEffect(() => {
-    const isAdminRoute = pathname?.startsWith("/admin");
-    const locale = isAdminRoute ? "en" : getLocaleFromPathname(pathname);
+export default function DocumentLanguage({ locale }: DocumentLanguageProps) {
+  useLayoutEffect(() => {
+    const documentElement = document.documentElement;
 
-    document.documentElement.lang = locale;
-  }, [pathname]);
+    documentElement.lang = locale;
+    documentElement.dataset.locale = locale;
+
+    return () => {
+      documentElement.lang = "en";
+      documentElement.dataset.locale = "en";
+    };
+  }, [locale]);
 
   return null;
 }

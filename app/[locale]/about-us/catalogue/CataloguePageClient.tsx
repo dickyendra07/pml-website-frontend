@@ -2,14 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import {
   CatalogueItem,
   getCatalogues,
   submitCatalogueRequest,
 } from "@/lib/api";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 import { resolveMediaUrl } from "@/lib/media";
 
 function getCatalogueMessage(catalogue: CatalogueItem, isIndonesian: boolean) {
@@ -18,9 +18,11 @@ function getCatalogueMessage(catalogue: CatalogueItem, isIndonesian: boolean) {
     : `Please send the latest official ${catalogue.title}.`;
 }
 
-export default function CataloguePage() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type CataloguePageProps = {
+  locale: Locale;
+};
+
+export default function CataloguePage({ locale }: CataloguePageProps) {
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>

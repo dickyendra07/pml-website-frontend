@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useRef, useState } from "react";
 
 import OtherServices from "@/components/OtherServices";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 const heroImage = "/images/pml/services/clinical-trial-cta.png";
 const companyImage = "/images/pml/services/contract-analysis-cta.png";
@@ -636,9 +636,11 @@ function AboutSectionIcon({ name }: { name: string }) {
   );
 }
 
-export default function AboutUsPage() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type AboutUsPageProps = {
+  locale: Locale;
+};
+
+export default function AboutUsPage({ locale }: AboutUsPageProps) {
   const isIndonesian = locale === "id";
 
   const timeline = isIndonesian ? timelineId : timelineEn;
@@ -1386,7 +1388,7 @@ export default function AboutUsPage() {
         </div>
       </section>
 
-      <OtherServices current={null} variant="four" />
+      <OtherServices current={null} locale={locale} variant="four" />
 
       <section className="bg-white pb-24 md:pb-32">
         <div className="pml-container">

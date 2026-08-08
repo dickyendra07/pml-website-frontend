@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import OtherServices from "@/components/OtherServices";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 const heroSlides = [
   "/images/pml/services/clinical-trial-hero.png",
@@ -954,9 +954,13 @@ function TherapeuticAreaIcon({ name }: { name: string }) {
   return <CheckIcon size={24} />;
 }
 
-export default function ClinicalTrialPage() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type ClinicalTrialPageProps = {
+  locale: Locale;
+};
+
+export default function ClinicalTrialPage({
+  locale,
+}: ClinicalTrialPageProps) {
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>
@@ -1671,7 +1675,11 @@ export default function ClinicalTrialPage() {
         </div>
       </section>
 
-      <OtherServices current="clinical-trial" variant="three" />
+      <OtherServices
+        current="clinical-trial"
+        locale={locale}
+        variant="three"
+      />
 
       <section className="bg-white pb-24 md:pb-32">
         <div className="pml-container">

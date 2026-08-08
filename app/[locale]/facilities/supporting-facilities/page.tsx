@@ -31,12 +31,20 @@ export async function generateMetadata({
   });
 }
 
-export default async function SupportingFacilitiesPage() {
+export default async function SupportingFacilitiesPage({
+  params,
+}: SupportingFacilitiesPageProps) {
+  const { locale } = await params;
+
+  if (!isLocale(locale)) {
+    notFound();
+  }
+
   const data = await getFacilityByKey("supporting-facilities");
 
   if (!data) {
     notFound();
   }
 
-  return <FacilityDetailTemplate data={data} />;
+  return <FacilityDetailTemplate data={data} locale={locale} />;
 }

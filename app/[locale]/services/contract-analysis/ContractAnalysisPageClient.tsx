@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import OtherServices from "@/components/OtherServices";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 const heroSlides = [
   "/images/pml/services/contract-analysis-hero.png",
@@ -567,9 +567,13 @@ function ClientIcon({ index }: { index: number }) {
   return <Icon name="cosmetic" />;
 }
 
-export default function ContractAnalysisPage() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type ContractAnalysisPageProps = {
+  locale: Locale;
+};
+
+export default function ContractAnalysisPage({
+  locale,
+}: ContractAnalysisPageProps) {
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>
@@ -1107,7 +1111,11 @@ export default function ContractAnalysisPage() {
         </div>
       </section>
 
-      <OtherServices current="contract-analysis" variant="three" />
+      <OtherServices
+        current="contract-analysis"
+        locale={locale}
+        variant="three"
+      />
 
       <section className="bg-white pb-24 md:pb-32">
         <div className="pml-container">

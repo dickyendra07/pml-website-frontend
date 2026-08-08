@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import InsightCategoryTemplate from "@/components/pages/InsightCategoryTemplate";
 import { isLocale, type Locale } from "@/i18n/config";
@@ -27,6 +28,12 @@ export async function generateMetadata({
   });
 }
 
-export default function FaqPage() {
-  return <InsightCategoryTemplate category="faq" />;
+export default async function FaqPage({ params }: FaqPageProps) {
+  const { locale } = await params;
+
+  if (!isLocale(locale)) {
+    notFound();
+  }
+
+  return <InsightCategoryTemplate category="faq" locale={locale} />;
 }

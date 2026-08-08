@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 const items = [
   {
@@ -141,9 +141,11 @@ function Icon({ name }: { name: string }) {
   );
 }
 
-export default function Facilities() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type FacilitiesProps = {
+  locale: Locale;
+};
+
+export default function Facilities({ locale }: FacilitiesProps) {
   const isIndonesian = locale === "id";
   return (
     <section

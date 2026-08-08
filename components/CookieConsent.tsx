@@ -1,18 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 const CONSENT_KEY = "pml_cookie_consent_v1";
 
 type ConsentValue = "accepted" | "rejected";
 
-export default function CookieConsent() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type CookieConsentProps = {
+  locale: Locale;
+};
+
+export default function CookieConsent({ locale }: CookieConsentProps) {
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>

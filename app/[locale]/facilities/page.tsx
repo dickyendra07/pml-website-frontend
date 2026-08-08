@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { isLocale, type Locale } from "@/i18n/config";
 import { generatePageMetadata } from "@/lib/page-seo";
@@ -30,6 +31,12 @@ export async function generateMetadata({
   });
 }
 
-export default function FacilitiesPage() {
-  return <FacilitiesPageClient />;
+export default async function FacilitiesPage({ params }: FacilitiesPageProps) {
+  const { locale } = await params;
+
+  if (!isLocale(locale)) {
+    notFound();
+  }
+
+  return <FacilitiesPageClient locale={locale} />;
 }

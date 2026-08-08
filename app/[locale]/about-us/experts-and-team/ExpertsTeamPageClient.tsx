@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 const regulatoryTeamEn = [
   {
@@ -470,9 +470,13 @@ const teamStrengthsEn = [
   },
 ];
 
-export default function ExpertsAndTeamPage() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type ExpertsAndTeamPageProps = {
+  locale: Locale;
+};
+
+export default function ExpertsAndTeamPage({
+  locale,
+}: ExpertsAndTeamPageProps) {
   const isIndonesian = locale === "id";
 
   const regulatoryTeam = isIndonesian ? regulatoryTeamId : regulatoryTeamEn;

@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { getLocaleFromPathname } from "@/i18n/client";
 import type { Locale } from "@/i18n/config";
 
 type LanguageSwitcherProps = {
+  locale: Locale;
   mobile?: boolean;
   onNavigate?: () => void;
 };
@@ -23,11 +23,11 @@ function getLocalizedPath(pathname: string, targetLocale: Locale) {
 }
 
 export default function LanguageSwitcher({
+  locale,
   mobile = false,
   onNavigate,
 }: LanguageSwitcherProps) {
   const pathname = usePathname() || "/";
-  const locale = getLocaleFromPathname(pathname);
 
   return (
     <div

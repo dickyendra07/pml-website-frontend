@@ -3,14 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import {
   fallbackPublicSettings,
   getPublicSettings,
   getSettingValue,
   PublicSettings,
 } from "@/lib/public-settings";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 function SocialLink({
   href,
@@ -71,9 +71,11 @@ const indonesianServiceLinks = [
   },
 ];
 
-export default function Footer() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type FooterProps = {
+  locale: Locale;
+};
+
+export default function Footer({ locale }: FooterProps) {
   const isIndonesian = locale === "id";
   const pageLinks = isIndonesian ? indonesianPageLinks : englishPageLinks;
   const serviceLinks = isIndonesian

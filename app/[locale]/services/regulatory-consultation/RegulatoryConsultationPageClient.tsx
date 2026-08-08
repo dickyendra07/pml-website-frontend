@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import OtherServices from "@/components/OtherServices";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 const heroSlides = [
   "/images/pml/services/clinical-trial-regulatory.png",
@@ -554,9 +554,13 @@ function ClientIcon({ index }: { index: number }) {
 }
 
 void ClientIcon;
-export default function RegulatoryConsultationPage() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type RegulatoryConsultationPageProps = {
+  locale: Locale;
+};
+
+export default function RegulatoryConsultationPage({
+  locale,
+}: RegulatoryConsultationPageProps) {
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>
@@ -1070,7 +1074,11 @@ export default function RegulatoryConsultationPage() {
         </div>
       </section>
 
-      <OtherServices current="regulatory-consultation" variant="three" />
+      <OtherServices
+        current="regulatory-consultation"
+        locale={locale}
+        variant="three"
+      />
 
       <section className="bg-white pb-24 md:pb-32">
         <div className="pml-container">

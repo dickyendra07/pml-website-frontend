@@ -3,9 +3,6 @@ import localFont from "next/font/local";
 
 import "./globals.css";
 
-import ClientShell from "@/components/ClientShell";
-import CookieConsent from "@/components/CookieConsent";
-import DocumentLanguage from "@/components/DocumentLanguage";
 import GoogleTagManager from "@/components/analytics/GoogleTagManager";
 import { getSeoDefaults } from "@/lib/server-settings";
 
@@ -136,7 +133,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-locale="en">
       <body className={`${kalbeHelix.className} ${kalbeHelix.variable}`}>
         <GoogleTagManager />
 
@@ -152,13 +149,7 @@ export default function RootLayout({
           />
         </noscript>
 
-        <DocumentLanguage />
-
-        <ClientShell>
-          {children}
-        </ClientShell>
-
-        <CookieConsent />
+        {children}
       </body>
     </html>
   );

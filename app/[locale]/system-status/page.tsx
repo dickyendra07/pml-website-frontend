@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
+import { isLocale } from "@/i18n/config";
 import SystemStatusClient from "./SystemStatusClient";
+
+type SystemStatusPageProps = {
+  params: Promise<{
+    locale: string;
+  }>;
+};
 
 export const metadata: Metadata = {
   title: "System Status | Pharma Metric Labs",
@@ -16,6 +24,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function SystemStatusPage() {
-  return <SystemStatusClient />;
+export default async function SystemStatusPage({
+  params,
+}: SystemStatusPageProps) {
+  const { locale } = await params;
+
+  if (!isLocale(locale)) {
+    notFound();
+  }
+
+  return <SystemStatusClient locale={locale} />;
 }

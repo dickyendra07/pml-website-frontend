@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+
+import type { Locale } from "@/i18n/config";
 import Header from "./Header";
 import Footer from "./Footer";
 import ProposalModal from "./ProposalModal";
 
 type ClientShellProps = {
   children: React.ReactNode;
+  locale: Locale;
 };
 
-export default function ClientShell({ children }: ClientShellProps) {
-  const pathname = usePathname();
+export default function ClientShell({ children, locale }: ClientShellProps) {
   const [proposalOpen, setProposalOpen] = useState(false);
-  const isAdminRoute = pathname?.startsWith("/admin");
 
   useEffect(() => {
     const openProposal = () => setProposalOpen(true);
@@ -25,16 +25,16 @@ export default function ClientShell({ children }: ClientShellProps) {
     };
   }, []);
 
-  if (isAdminRoute) {
-    return <>{children}</>;
-  }
-
   return (
     <>
-      <Header onOpenProposal={() => setProposalOpen(true)} />
+      <Header locale={locale} onOpenProposal={() => setProposalOpen(true)} />
       {children}
-      <Footer />
-      <ProposalModal open={proposalOpen} onClose={() => setProposalOpen(false)} />
+      <Footer locale={locale} />
+      <ProposalModal
+        locale={locale}
+        open={proposalOpen}
+        onClose={() => setProposalOpen(false)}
+      />
     </>
   );
 }

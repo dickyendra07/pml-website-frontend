@@ -1,9 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-
 import SectionHeader from "@/components/ui/SectionHeader";
-import { getLocaleFromPathname } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 const englishPoints = [
   {
@@ -215,9 +213,11 @@ function WhyIcon({ name }: { name: string }) {
   return null;
 }
 
-export default function WhyPml() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type WhyPmlProps = {
+  locale: Locale;
+};
+
+export default function WhyPml({ locale }: WhyPmlProps) {
   const isIndonesian = locale === "id";
   const points = isIndonesian ? indonesianPoints : englishPoints;
 

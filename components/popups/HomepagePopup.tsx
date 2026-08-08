@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 import { resolveMediaUrl, type MediaSource } from "@/lib/media";
 
 type PopupLayout = "IMAGE_LEFT" | "IMAGE_RIGHT" | "IMAGE_TOP" | "TEXT_ONLY";
@@ -69,9 +69,11 @@ function markPopupClosed(popup: PopupItem) {
   }
 }
 
-export default function HomepagePopup() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type HomepagePopupProps = {
+  locale: Locale;
+};
+
+export default function HomepagePopup({ locale }: HomepagePopupProps) {
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>

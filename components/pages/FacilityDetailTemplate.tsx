@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import {
@@ -10,10 +9,12 @@ import {
   type FacilityKey,
   facilities,
 } from "@/data/facilities";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 type FacilityDetailTemplateProps = {
   data: FacilityItem;
+  locale: Locale;
 };
 
 const facilityTranslationsId: Record<
@@ -85,9 +86,8 @@ const facilityTranslationsId: Record<
 
 export default function FacilityDetailTemplate({
   data,
+  locale,
 }: FacilityDetailTemplateProps) {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>

@@ -31,12 +31,20 @@ export async function generateMetadata({
   });
 }
 
-export default async function ClinicalFacilitiesPage() {
+export default async function ClinicalFacilitiesPage({
+  params,
+}: ClinicalFacilitiesPageProps) {
+  const { locale } = await params;
+
+  if (!isLocale(locale)) {
+    notFound();
+  }
+
   const data = await getFacilityByKey("clinical-facilities");
 
   if (!data) {
     notFound();
   }
 
-  return <FacilityDetailTemplate data={data} />;
+  return <FacilityDetailTemplate data={data} locale={locale} />;
 }

@@ -3,12 +3,17 @@ import ContentBlock from "./ContentBlock";
 import OtherServices from "@/components/OtherServices";
 import CTACard from "@/components/ui/CTACard";
 import { ServicePageData } from "@/data/service-pages";
+import type { Locale } from "@/i18n/config";
 
 type ServiceDetailTemplateProps = {
   data: ServicePageData;
+  locale: Locale;
 };
 
-export default function ServiceDetailTemplate({ data }: ServiceDetailTemplateProps) {
+export default function ServiceDetailTemplate({
+  data,
+  locale,
+}: ServiceDetailTemplateProps) {
   return (
     <main>
       <ServiceHero
@@ -16,6 +21,7 @@ export default function ServiceDetailTemplate({ data }: ServiceDetailTemplatePro
         title={data.title}
         description={data.description}
         image={data.image}
+        locale={locale}
       />
 
       <ContentBlock
@@ -96,7 +102,7 @@ export default function ServiceDetailTemplate({ data }: ServiceDetailTemplatePro
         </div>
       </section>
 
-      <OtherServices current={data.key} variant="three" />
+      <OtherServices current={data.key} locale={locale} variant="three" />
       <CTACard />
     </main>
   );

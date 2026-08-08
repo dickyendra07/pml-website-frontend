@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 import SectionHeader from "@/components/ui/SectionHeader";
 import { services } from "@/data/services";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 const indonesianServiceContent: Record<
   string,
@@ -37,9 +37,11 @@ const indonesianServiceContent: Record<
   },
 };
 
-export default function Services() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type ServicesProps = {
+  locale: Locale;
+};
+
+export default function Services({ locale }: ServicesProps) {
   const isIndonesian = locale === "id";
 
   return (

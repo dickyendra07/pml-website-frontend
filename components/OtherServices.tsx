@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 import { getOtherServices, ServiceKey } from "@/data/services";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 type OtherServicesProps = {
   current?: ServiceKey | null;
+  locale: Locale;
   variant?: "three" | "four";
 };
 
@@ -43,10 +44,9 @@ const indonesianServices: Record<
 
 export default function OtherServices({
   current = null,
+  locale,
   variant = "three",
 }: OtherServicesProps) {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
   const isIndonesian = locale === "id";
 
   const services = getOtherServices(current);

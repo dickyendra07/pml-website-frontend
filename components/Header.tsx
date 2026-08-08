@@ -6,9 +6,11 @@ import { ReactNode, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 type HeaderProps = {
+  locale: Locale;
   onOpenProposal: () => void;
 };
 
@@ -871,9 +873,8 @@ function MobileAccordion({
   );
 }
 
-export default function Header({ onOpenProposal }: HeaderProps) {
+export default function Header({ locale, onOpenProposal }: HeaderProps) {
   const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
   const isIndonesian = locale === "id";
 
   const localizedHref = (href: string) => localizeHref(href, locale);
@@ -1076,7 +1077,7 @@ export default function Header({ onOpenProposal }: HeaderProps) {
         </nav>
 
         <div className="hidden items-center gap-3 xl:flex">
-          <LanguageSwitcher />
+          <LanguageSwitcher locale={locale} />
 
           <button
             type="button"
@@ -1131,7 +1132,11 @@ export default function Header({ onOpenProposal }: HeaderProps) {
             </div>
 
             <div className="mt-7">
-              <LanguageSwitcher mobile onNavigate={closeMobile} />
+              <LanguageSwitcher
+                locale={locale}
+                mobile
+                onNavigate={closeMobile}
+              />
             </div>
 
             <div className="mt-5 grid gap-2.5 text-base font-black text-black sm:mt-7 sm:gap-3 sm:text-lg">

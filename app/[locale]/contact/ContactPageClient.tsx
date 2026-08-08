@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 import { submitProposal } from "@/lib/api";
 import {
   fallbackPublicSettings,
@@ -64,9 +64,11 @@ function ContactIcon({ type }: { type: string }) {
   );
 }
 
-export default function ContactPageClient() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type ContactPageClientProps = {
+  locale: Locale;
+};
+
+export default function ContactPageClient({ locale }: ContactPageClientProps) {
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>

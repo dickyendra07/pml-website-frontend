@@ -2,10 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-
 import { services, type ServiceKey } from "@/data/services";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 const serviceTranslationsId: Record<
   ServiceKey,
@@ -36,9 +35,13 @@ const serviceTranslationsId: Record<
   },
 };
 
-export default function ServicesPageClient() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type ServicesPageClientProps = {
+  locale: Locale;
+};
+
+export default function ServicesPageClient({
+  locale,
+}: ServicesPageClientProps) {
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>

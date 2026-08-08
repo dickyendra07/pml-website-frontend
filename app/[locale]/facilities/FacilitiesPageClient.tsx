@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import FacilityCardGrid from "@/components/pages/FacilityCardGrid";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 const facilityHeroSlidesEn = [
   {
@@ -86,9 +86,11 @@ const facilityHeroSlidesId = [
   },
 ];
 
-export default function FacilitiesPage() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type FacilitiesPageProps = {
+  locale: Locale;
+};
+
+export default function FacilitiesPage({ locale }: FacilitiesPageProps) {
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>
@@ -278,7 +280,7 @@ export default function FacilitiesPage() {
       </section>
 
       <div id="facilities-list">
-        <FacilityCardGrid />
+        <FacilityCardGrid locale={locale} />
       </div>
 
       <section className="bg-white py-16 md:py-28">

@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
-import { isLocale, locales, type Locale } from "@/i18n/config";
+
+import ClientShell from "@/components/ClientShell";
+import CookieConsent from "@/components/CookieConsent";
+import DocumentLanguage from "@/components/DocumentLanguage";
+import { isLocale, locales } from "@/i18n/config";
 
 type LocaleLayoutProps = {
   children: React.ReactNode;
@@ -18,9 +22,21 @@ export default async function LocaleLayout({
 }: LocaleLayoutProps) {
   const { locale } = await params;
 
+  console.log("LOCALE LAYOUT RUN:", locale);
+
+  console.log("LOCALE LAYOUT RUN:", locale);
+
   if (!isLocale(locale)) {
     notFound();
   }
 
-  return <div data-locale={locale satisfies Locale}>{children}</div>;
+  return (
+    <>
+      <DocumentLanguage locale={locale} />
+      <ClientShell key={locale} locale={locale}>
+        {children}
+      </ClientShell>
+      <CookieConsent locale={locale} />
+    </>
+  );
 }

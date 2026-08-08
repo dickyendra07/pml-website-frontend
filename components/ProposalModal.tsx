@@ -1,9 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 
-import { getLocaleFromPathname } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 import { submitProposal } from "@/lib/api";
 import {
   fallbackPublicSettings,
@@ -13,6 +12,7 @@ import {
 } from "@/lib/public-settings";
 
 type ProposalModalProps = {
+  locale: Locale;
   open: boolean;
   onClose: () => void;
 };
@@ -27,9 +27,11 @@ const initialForm = {
   projectNeeds: "",
 };
 
-export default function ProposalModal({ open, onClose }: ProposalModalProps) {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+export default function ProposalModal({
+  locale,
+  open,
+  onClose,
+}: ProposalModalProps) {
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>

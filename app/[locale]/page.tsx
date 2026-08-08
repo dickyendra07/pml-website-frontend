@@ -70,10 +70,10 @@ export default async function LocalizedHomePage({
 
   return (
     <main data-language={locale} data-home-heading={dictionary.navigation.home}>
-      <Hero />
+      <Hero locale={locale} />
       <Stats />
-      <Services />
-      <WhyPml />
+      <Services locale={locale} />
+      <WhyPml locale={locale} />
       <HomepageFeatures />
       <CTACard
         eyebrow={locale === "id" ? "Mulai Sebuah Proyek" : "Start a Project"}
@@ -95,7 +95,7 @@ export default async function LocalizedHomePage({
         }
         secondaryHref={`/${locale}/contact`}
       />
-      <HomepagePopup />
+      <HomepagePopup locale={locale} />
     </main>
   );
 }

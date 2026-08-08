@@ -1,9 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
-import { getLocaleFromPathname } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 type PublicServiceStatus = "operational" | "unavailable";
 
@@ -230,9 +229,13 @@ function StatusCard({
   );
 }
 
-export default function SystemStatusClient() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type SystemStatusClientProps = {
+  locale: Locale;
+};
+
+export default function SystemStatusClient({
+  locale,
+}: SystemStatusClientProps) {
   const isIndonesian = locale === "id";
 
   const t = useCallback(

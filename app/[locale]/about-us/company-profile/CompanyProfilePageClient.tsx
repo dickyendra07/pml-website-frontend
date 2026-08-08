@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 const corporateStatsEn = [
   {
@@ -630,9 +630,13 @@ function AccreditationIcon({ name }: { name: string }) {
   );
 }
 
-export default function CompanyProfilePage() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type CompanyProfilePageProps = {
+  locale: Locale;
+};
+
+export default function CompanyProfilePage({
+  locale,
+}: CompanyProfilePageProps) {
   const isIndonesian = locale === "id";
 
   const corporateStats = isIndonesian ? corporateStatsId : corporateStatsEn;

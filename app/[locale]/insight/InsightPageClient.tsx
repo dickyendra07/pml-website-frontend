@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import InsightCard from "@/components/pages/InsightCard";
 import { insightCategories, insightFaqs } from "@/data/insights";
-import { getLocaleFromPathname, localizeHref } from "@/i18n/client";
+import { localizeHref } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 import { getInsights, InsightItem } from "@/lib/api";
 
 const categoryIcons: Record<string, string> = {
@@ -68,9 +68,11 @@ const insightFaqsId = [
   },
 ];
 
-export default function InsightPage() {
-  const pathname = usePathname();
-  const locale = getLocaleFromPathname(pathname);
+type InsightPageProps = {
+  locale: Locale;
+};
+
+export default function InsightPage({ locale }: InsightPageProps) {
   const isIndonesian = locale === "id";
 
   const t = (english: string, indonesian: string) =>
@@ -360,12 +362,14 @@ export default function InsightPage() {
             </div>
           ) : null}
 
-          {featured ? <InsightCard item={featured} featured /> : null}
+          {featured ? (
+            <InsightCard item={featured} locale={locale} featured />
+          ) : null}
 
           {latest.length > 0 ? (
             <div className="-mx-4 mt-8 flex snap-x gap-4 overflow-x-auto px-4 pb-5 md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 md:pb-0">
               {latest.map((item) => (
-                <InsightCard key={item.slug} item={item} />
+                <InsightCard key={item.slug} item={item} locale={locale} />
               ))}
             </div>
           ) : null}

@@ -31,12 +31,18 @@ export async function generateMetadata({
   });
 }
 
-export default async function VrGalleryPage() {
+export default async function VrGalleryPage({ params }: VrGalleryPageProps) {
+  const { locale } = await params;
+
+  if (!isLocale(locale)) {
+    notFound();
+  }
+
   const data = await getFacilityByKey("vr-gallery");
 
   if (!data) {
     notFound();
   }
 
-  return <FacilityDetailTemplate data={data} />;
+  return <FacilityDetailTemplate data={data} locale={locale} />;
 }
