@@ -26,6 +26,28 @@ const SITE_NAME = "Pharma Metric Labs";
 const SITE_URL = "https://pharmametriclabs.com";
 const DEFAULT_OG_IMAGE = "/images/pml/hero-lab-hexagon.png";
 
+function getLocaleMetadata(path: string) {
+  const match = path.match(/^\/(en|id)(?=\/|$)/);
+
+  if (!match) {
+    return null;
+  }
+
+  const locale = match[1] as "en" | "id";
+  const routePath = path.replace(/^\/(en|id)(?=\/|$)/, "") || "";
+  const localizedUrl = (targetLocale: "en" | "id") =>
+    `${SITE_URL}/${targetLocale}${routePath}`;
+
+  return {
+    locale,
+    languages: {
+      en: localizedUrl("en"),
+      id: localizedUrl("id"),
+      "x-default": localizedUrl("en"),
+    },
+  };
+}
+
 export async function getPageSeo(path: string): Promise<PageSeo | null> {
   if (!hasApiBaseUrl) {
     return null;
@@ -71,18 +93,29 @@ export async function generatePageMetadata(
   const ogDescription = seo?.ogDescription || description;
   const canonicalUrl = seo?.canonicalUrl || `${SITE_URL}${path === "/" ? "" : path}`;
   const ogImage = resolveMediaUrl(seo?.ogImage) || DEFAULT_OG_IMAGE;
+  const localeMetadata = getLocaleMetadata(path);
 
   return {
     title,
     description,
     alternates: {
       canonical: canonicalUrl,
+      ...(localeMetadata
+        ? { languages: localeMetadata.languages }
+        : {}),
     },
     openGraph: {
       title: ogTitle,
       description: ogDescription,
       url: canonicalUrl,
       siteName: SITE_NAME,
+      ...(localeMetadata
+        ? {
+            locale: localeMetadata.locale === "id" ? "id_ID" : "en_US",
+            alternateLocale:
+              localeMetadata.locale === "id" ? "en_US" : "id_ID",
+          }
+        : {}),
       images: [
         {
           url: ogImage,

@@ -22,10 +22,6 @@ export default async function LocaleLayout({
 }: LocaleLayoutProps) {
   const { locale } = await params;
 
-  console.log("LOCALE LAYOUT RUN:", locale);
-
-  console.log("LOCALE LAYOUT RUN:", locale);
-
   if (!isLocale(locale)) {
     notFound();
   }
