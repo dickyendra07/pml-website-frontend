@@ -201,11 +201,13 @@ export default function MediaPicker({
   const [savingMetadata, setSavingMetadata] = useState(false);
 
   const [metadataForm, setMetadataForm] = useState({
+    filename: "",
     title: "",
     altText: "",
     description: "",
     caption: "",
     tags: "",
+    folder: "",
   });
 
   const imageUrl = resolveMediaUrl(value);
@@ -356,11 +358,13 @@ export default function MediaPicker({
     if (!selectedItem) return;
 
     setMetadataForm({
+      filename: selectedItem.filename || "",
       title: selectedItem.title || "",
       altText: selectedItem.altText || "",
       description: selectedItem.description || "",
       caption: selectedItem.caption || "",
       tags: (selectedItem.tags || []).join(", "),
+      folder: selectedItem.folder || "general",
     });
 
     setEditingMetadata(true);
@@ -384,6 +388,7 @@ export default function MediaPicker({
         token,
         selectedItem.id,
         {
+          filename: metadataForm.filename,
           title: metadataForm.title,
           altText: metadataForm.altText,
           description: metadataForm.description,
@@ -392,6 +397,7 @@ export default function MediaPicker({
             .split(",")
             .map((item) => item.trim())
             .filter(Boolean),
+          folder: metadataForm.folder,
         },
       );
 
@@ -997,10 +1003,12 @@ export default function MediaPicker({
                             editingMetadata ? (
                               <div className="mt-4 space-y-3">
                                 {[
+                                  ["filename", "Filename"],
                                   ["title", "Title"],
                                   ["altText", "Alt Text"],
                                   ["caption", "Caption"],
                                   ["tags", "Tags"],
+                                  ["folder", "Folder"],
                                 ].map(([key, label]) => (
                                   <div key={key}>
                                     <p className="mb-1 text-xs font-bold text-black/40">

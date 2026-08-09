@@ -111,6 +111,8 @@ export async function submitCatalogueRequest(payload: {
   email: string;
   phone?: string;
   message?: string;
+  locale?: "en" | "id";
+  sourcePage?: string;
 }) {
   const response = await fetch(`${API_BASE_URL}/catalogues/requests`, {
     method: "POST",
@@ -287,6 +289,18 @@ export type CareerItem = {
   benefits: string | null;
   applyEmail: string | null;
   applyUrl: string | null;
+  featuredImage: string | null;
+  featuredReference: MediaSource;
+  featuredMediaId: string | null;
+  featuredMedia: {
+    id: string;
+    url: string;
+    title: string | null;
+    altText: string | null;
+    caption: string | null;
+    width: number | null;
+    height: number | null;
+  } | null;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   sortOrder: number;
   publishedAt: string | null;
@@ -294,7 +308,22 @@ export type CareerItem = {
   updatedAt: string;
 };
 
-export async function getCareers() {
+type CareerApiItem = Omit<CareerItem, "featuredImage"> & {
+  featuredImage: MediaSource;
+};
+
+function normalizeCareer(item: CareerApiItem): CareerItem {
+  return {
+    ...item,
+    featuredImage:
+      resolveMediaUrl(item.featuredReference) ||
+      resolveMediaUrl(item.featuredImage) ||
+      resolveMediaUrl(item.featuredMedia?.url) ||
+      null,
+  };
+}
+
+export async function getCareers(): Promise<CareerItem[]> {
   if (!hasApiBaseUrl) {
     return [];
   }
@@ -307,7 +336,63 @@ export async function getCareers() {
     throw new Error("Failed to load careers.");
   }
 
-  return (await response.json()) as CareerItem[];
+  const items = (await response.json()) as CareerApiItem[];
+  return Array.isArray(items) ? items.map(normalizeCareer) : [];
+}
+
+export type CareerDocumentationItem = {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  documentationDate: string | null;
+  displayOrder: number;
+  mediaId: string | null;
+  mediaReference: MediaSource;
+  media: {
+    id: string;
+    url: string;
+    title: string | null;
+    altText: string | null;
+    caption: string | null;
+    width: number | null;
+    height: number | null;
+  } | null;
+  image: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type CareerDocumentationApiItem = Omit<
+  CareerDocumentationItem,
+  "image"
+>;
+
+export async function getCareerDocumentation(
+  locale: "en" | "id",
+): Promise<CareerDocumentationItem[]> {
+  if (!hasApiBaseUrl) return [];
+
+  const response = await fetch(
+    `${API_BASE_URL}/career-documentation?locale=${locale}`,
+    { cache: "no-store" },
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to load career documentation.");
+  }
+
+  const items = (await response.json()) as CareerDocumentationApiItem[];
+
+  return Array.isArray(items)
+    ? items.map((item) => ({
+        ...item,
+        image:
+          resolveMediaUrl(item.mediaReference) ||
+          resolveMediaUrl(item.media?.url) ||
+          null,
+      }))
+    : [];
 }
 
 

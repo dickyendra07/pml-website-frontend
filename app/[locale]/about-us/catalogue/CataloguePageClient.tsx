@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   CatalogueItem,
   getCatalogues,
@@ -41,6 +41,7 @@ export default function CataloguePage({ locale }: CataloguePageProps) {
   const [catalogueStatus, setCatalogueStatus] = useState<
     "loading" | "success" | "error"
   >("loading");
+  const requestInFlight = useRef(false);
 
   const openProposal = () => {
     window.dispatchEvent(new CustomEvent("open-proposal-modal"));
@@ -74,6 +75,8 @@ export default function CataloguePage({ locale }: CataloguePageProps) {
   const handleCatalogueRequest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (requestInFlight.current) return;
+
     const selectedCatalogue = catalogues.find(
       (item) => item.id === selectedCatalogueId,
     );
@@ -91,6 +94,7 @@ export default function CataloguePage({ locale }: CataloguePageProps) {
 
     setRequestStatus("loading");
     setRequestMessage("");
+    requestInFlight.current = true;
 
     try {
       await submitCatalogueRequest({
@@ -100,6 +104,8 @@ export default function CataloguePage({ locale }: CataloguePageProps) {
         email: requestEmail,
         phone: requestPhone || undefined,
         message: getCatalogueMessage(selectedCatalogue, isIndonesian),
+        locale,
+        sourcePage: `/${locale}/about-us/catalogue`,
       });
 
       setRequestStatus("success");
@@ -124,6 +130,8 @@ export default function CataloguePage({ locale }: CataloguePageProps) {
               "Terjadi kesalahan. Silakan coba kembali.",
             ),
       );
+    } finally {
+      requestInFlight.current = false;
     }
   };
 

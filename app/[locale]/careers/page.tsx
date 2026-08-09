@@ -4,8 +4,14 @@ import Link from "next/link";
 
 import { isLocale, type Locale } from "@/i18n/config";
 import { localizeHref } from "@/i18n/client";
-import { type CareerItem, getCareers } from "@/lib/api";
+import {
+  type CareerDocumentationItem,
+  type CareerItem,
+  getCareerDocumentation,
+  getCareers,
+} from "@/lib/api";
 import { generatePageMetadata } from "@/lib/page-seo";
+import CareerDocumentationGallery from "@/components/careers/CareerDocumentationGallery";
 
 type CareersPageProps = {
   params: Promise<{
@@ -218,11 +224,16 @@ export default async function CareersPage({ params }: CareersPageProps) {
   )}`;
 
   let careers: CareerItem[] = [];
+  let documentation: CareerDocumentationItem[] = [];
 
-  try {
-    careers = await getCareers();
-  } catch {
-    careers = [];
+  const [careersResult, documentationResult] = await Promise.allSettled([
+    getCareers(),
+    getCareerDocumentation(locale),
+  ]);
+
+  if (careersResult.status === "fulfilled") careers = careersResult.value;
+  if (documentationResult.status === "fulfilled") {
+    documentation = documentationResult.value;
   }
 
   return (
@@ -398,8 +409,33 @@ export default async function CareersPage({ params }: CareersPageProps) {
                         key={career.id}
                         className="group overflow-hidden rounded-[28px] border border-black/5 bg-[#f8fbf9] shadow-sm transition open:border-[#039147]/18 open:shadow-[0_18px_50px_rgba(3,145,71,0.10)]"
                       >
-                        <summary className="flex cursor-pointer list-none items-center justify-between gap-5 p-5 md:p-6">
-                          <span>
+                        <summary
+                          className={`cursor-pointer list-none gap-5 p-5 md:p-6 ${
+                            career.featuredImage
+                              ? "grid md:grid-cols-[220px_1fr_auto] md:items-center"
+                              : "flex items-center justify-between"
+                          }`}
+                        >
+                          {career.featuredImage ? (
+                            <span className="relative block aspect-[4/3] overflow-hidden rounded-[22px] bg-[#eaf8f0] md:aspect-auto md:h-full md:min-h-[180px]">
+                              <Image
+                                src={career.featuredImage}
+                                alt={
+                                  career.featuredMedia?.altText ||
+                                  career.featuredMedia?.title ||
+                                  career.title
+                                }
+                                fill
+                                sizes="(max-width: 767px) 100vw, 220px"
+                                className="object-cover transition duration-500 group-hover:scale-[1.025]"
+                                unoptimized={career.featuredImage.includes(
+                                  "/uploads/",
+                                )}
+                              />
+                            </span>
+                          ) : null}
+
+                          <span className="min-w-0">
                             <span className="flex flex-wrap gap-2">
                               <span className="rounded-full bg-[#eaf8f0] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#039147]">
                                 {career.department || t("General", "Umum")}
@@ -556,6 +592,8 @@ export default async function CareersPage({ params }: CareersPageProps) {
           </div>
         </div>
       </section>
+
+      <CareerDocumentationGallery items={documentation} locale={locale} />
     </main>
   );
 }

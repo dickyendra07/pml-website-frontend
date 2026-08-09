@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
+import MediaPicker from "@/components/admin/MediaPicker";
 import {
   AdminCareerItem,
   PageSeoStatus,
@@ -12,6 +13,10 @@ import {
   getAdminToken,
   updateAdminCareer,
 } from "@/lib/admin-api";
+import {
+  MediaReference,
+  createMediaReference,
+} from "@/lib/media";
 
 type CareerForm = {
   id: string;
@@ -28,6 +33,8 @@ type CareerForm = {
   benefits: string;
   applyEmail: string;
   applyUrl: string;
+  featuredImage: string;
+  featuredMedia: MediaReference | null;
   status: PageSeoStatus;
   sortOrder: string;
   publishedAt: string;
@@ -48,13 +55,12 @@ const emptyForm: CareerForm = {
   benefits: "",
   applyEmail: "",
   applyUrl: "",
+  featuredImage: "",
+  featuredMedia: null,
   status: "DRAFT",
   sortOrder: "0",
   publishedAt: "",
 };
-
-const employmentTypes = ["Full-time", "Part-time", "Contract", "Internship", "Freelance"];
-const departments = ["Clinical", "Analytical", "Regulatory", "Project Management", "Operations", "Business Development", "General"];
 
 function toDateTimeLocal(value: string | null) {
   if (!value) return "";
@@ -92,6 +98,12 @@ function mapCareerToForm(item: AdminCareerItem): CareerForm {
     benefits: item.benefits || "",
     applyEmail: item.applyEmail || "",
     applyUrl: item.applyUrl || "",
+    featuredImage: item.featuredImage || "",
+    featuredMedia:
+      item.featuredReference ||
+      createMediaReference(item.featuredImage, {
+        mediaId: item.featuredMediaId,
+      }),
     status: item.status,
     sortOrder: String(item.sortOrder ?? 0),
     publishedAt: toDateTimeLocal(item.publishedAt),
@@ -206,6 +218,9 @@ export default function AdminCareersPage() {
       benefits: form.benefits || null,
       applyEmail: form.applyEmail || null,
       applyUrl: form.applyUrl || null,
+      featuredImage: form.featuredMedia?.url || form.featuredImage || null,
+      featuredReference: form.featuredMedia,
+      featuredMediaId: form.featuredMedia?.mediaId || null,
       status: form.status,
       sortOrder: Number(form.sortOrder) || 0,
       publishedAt: toIsoOrNull(form.publishedAt),
@@ -363,6 +378,24 @@ export default function AdminCareersPage() {
                 required
               />
             </label>
+
+            <div className="md:col-span-2">
+              <MediaPicker
+                value={form.featuredImage}
+                onChange={(url) => updateField("featuredImage", url)}
+                onReferenceChange={(reference) =>
+                  setForm((current) => ({
+                    ...current,
+                    featuredImage: reference?.url || "",
+                    featuredMedia: reference,
+                  }))
+                }
+                folder="careers"
+                title="Career Featured Image"
+                description="Choose a reusable image from the PML Media Library. Card Image is recommended for the public Careers page."
+                defaultVariant="card"
+              />
+            </div>
 
             
 

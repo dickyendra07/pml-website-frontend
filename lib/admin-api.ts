@@ -216,15 +216,33 @@ export async function updateAdminSettings(
 export type PageSeoStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
 
+export type CatalogueRequestStatus =
+  | "NEW"
+  | "IN_REVIEW"
+  | "CONTACTED"
+  | "FOLLOW_UP"
+  | "COMPLETED"
+  | "CLOSED"
+  | "SPAM";
+
 export type AdminCatalogueRequest = {
   id: string;
+  catalogueId: string | null;
+  catalogueTitleSnapshot: string | null;
   name: string;
   company: string | null;
   email: string;
   phone: string | null;
   message: string | null;
+  locale: string | null;
+  sourcePage: string | null;
+  status: CatalogueRequestStatus;
+  internalNotes: string | null;
+  lastFollowUpAt: string | null;
   createdAt: string;
+  updatedAt: string;
   catalogue?: {
+    id: string;
     title: string;
     serviceType: string | null;
   } | null;
@@ -233,10 +251,26 @@ export type AdminCatalogueRequest = {
 
 export async function getAdminCatalogueRequests(
   token: string,
+  filters?: {
+    search?: string;
+    status?: CatalogueRequestStatus | "ALL";
+    catalogueId?: string;
+  },
 ): Promise<AdminCatalogueRequest[]> {
+  const searchParams = new URLSearchParams();
+
+  if (filters?.search) searchParams.set("search", filters.search);
+  if (filters?.status && filters.status !== "ALL") {
+    searchParams.set("status", filters.status);
+  }
+  if (filters?.catalogueId) {
+    searchParams.set("catalogueId", filters.catalogueId);
+  }
+
+  const query = searchParams.toString();
 
   const response = await fetch(
-    `${API_BASE_URL}/admin/catalogues/requests`,
+    `${API_BASE_URL}/admin/catalogues/requests${query ? `?${query}` : ""}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -252,6 +286,44 @@ export async function getAdminCatalogueRequests(
   }
 
   return (await response.json()) as AdminCatalogueRequest[];
+}
+
+export async function getAdminCatalogueRequest(
+  token: string,
+  id: string,
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/admin/catalogues/requests/${id}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    },
+  );
+
+  return parseJsonResponse<AdminCatalogueRequest>(response);
+}
+
+export async function updateAdminCatalogueRequest(
+  token: string,
+  id: string,
+  payload: {
+    status?: CatalogueRequestStatus;
+    internalNotes?: string | null;
+  },
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/admin/catalogues/requests/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return parseJsonResponse<AdminCatalogueRequest>(response);
 }
 
 
@@ -978,6 +1050,10 @@ export type AdminCareerItem = {
   benefits: string | null;
   applyEmail: string | null;
   applyUrl: string | null;
+  featuredImage: string | null;
+  featuredReference: MediaReference | null;
+  featuredMediaId: string | null;
+  featuredMedia: MediaAssetItem | null;
   status: PageSeoStatus;
   sortOrder: number;
   publishedAt: string | null;
@@ -999,6 +1075,9 @@ export type AdminCareerPayload = {
   benefits?: string | null;
   applyEmail?: string | null;
   applyUrl?: string | null;
+  featuredImage?: string | null;
+  featuredReference?: MediaReference | null;
+  featuredMediaId?: string | null;
   status?: PageSeoStatus;
   sortOrder?: number;
   publishedAt?: string | null;
@@ -1057,6 +1136,96 @@ export async function archiveAdminCareer(token: string, id: string) {
   });
 
   return parseJsonResponse<AdminCareerItem>(response);
+}
+
+export type AdminCareerDocumentationItem = {
+  id: string;
+  titleEn: string;
+  titleId: string | null;
+  descriptionEn: string | null;
+  descriptionId: string | null;
+  category: string;
+  documentationDate: string | null;
+  displayOrder: number;
+  status: PageSeoStatus;
+  mediaId: string | null;
+  mediaReference: MediaReference | null;
+  media: MediaAssetItem | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminCareerDocumentationPayload = {
+  titleEn: string;
+  titleId?: string | null;
+  descriptionEn?: string | null;
+  descriptionId?: string | null;
+  category: string;
+  documentationDate?: string | null;
+  displayOrder?: number;
+  status?: PageSeoStatus;
+  mediaId?: string | null;
+  mediaReference?: MediaReference | null;
+};
+
+export async function getAdminCareerDocumentation(token: string) {
+  const response = await fetch(`${API_BASE_URL}/admin/career-documentation`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  return parseJsonResponse<AdminCareerDocumentationItem[]>(response);
+}
+
+export async function createAdminCareerDocumentation(
+  token: string,
+  payload: AdminCareerDocumentationPayload,
+) {
+  const response = await fetch(`${API_BASE_URL}/admin/career-documentation`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseJsonResponse<AdminCareerDocumentationItem>(response);
+}
+
+export async function updateAdminCareerDocumentation(
+  token: string,
+  id: string,
+  payload: AdminCareerDocumentationPayload,
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/admin/career-documentation/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return parseJsonResponse<AdminCareerDocumentationItem>(response);
+}
+
+export async function deleteAdminCareerDocumentation(
+  token: string,
+  id: string,
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/admin/career-documentation/${id}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+
+  return parseJsonResponse<{ success: boolean; message: string }>(response);
 }
 
 
