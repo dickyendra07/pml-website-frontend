@@ -379,23 +379,6 @@ export default function AdminCareersPage() {
               />
             </label>
 
-            <div className="md:col-span-2">
-              <MediaPicker
-                value={form.featuredImage}
-                onChange={(url) => updateField("featuredImage", url)}
-                onReferenceChange={(reference) =>
-                  setForm((current) => ({
-                    ...current,
-                    featuredImage: reference?.url || "",
-                    featuredMedia: reference,
-                  }))
-                }
-                folder="careers"
-                title="Career Featured Image"
-                description="Choose a reusable image from the PML Media Library. Card Image is recommended for the public Careers page."
-                defaultVariant="card"
-              />
-            </div>
 
             
 
@@ -493,6 +476,24 @@ export default function AdminCareersPage() {
               {message}
             </div>
           ) : null}
+
+          <div className="mt-6">
+            <MediaPicker
+              value={form.featuredImage}
+              onChange={(url) => updateField("featuredImage", url)}
+              onReferenceChange={(reference) =>
+                setForm((current) => ({
+                  ...current,
+                  featuredImage: reference?.url || "",
+                  featuredMedia: reference,
+                }))
+              }
+              folder="careers"
+              title="Career Featured Image"
+              description="Choose a reusable image from the PML Media Library. Card Image is recommended for the public Careers page."
+              defaultVariant="card"
+            />
+          </div>
 
           <div className="mt-8 flex flex-col gap-3 rounded-[24px] border border-black/5 bg-white5 p-3 sm:flex-row sm:justify-end">
             {form.id ? (
