@@ -379,10 +379,23 @@ export default function AdminCareersPage() {
               />
             </label>
 
+            <label className="grid gap-2">
+              <span className="text-sm font-black text-black">Slug</span>
+              <input
+                value={form.slug}
+                onChange={(event) => updateField("slug", event.target.value)}
+                className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+              />
+            </label>
 
-            
-
-            
+            <label className="grid gap-2">
+              <span className="text-sm font-black text-black">Department</span>
+              <input
+                value={form.department}
+                onChange={(event) => updateField("department", event.target.value)}
+                className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+              />
+            </label>
 
             <label className="grid gap-2">
               <span className="text-sm font-black text-black">Location</span>
@@ -390,17 +403,45 @@ export default function AdminCareersPage() {
                 value={form.location}
                 onChange={(event) => updateField("location", event.target.value)}
                 className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
-                placeholder="Jakarta / On-site / Hybrid"
               />
             </label>
 
-            
+            <label className="grid gap-2">
+              <span className="text-sm font-black text-black">Employment Type</span>
+              <input
+                value={form.employmentType}
+                onChange={(event) => updateField("employmentType", event.target.value)}
+                className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+              />
+            </label>
 
-            
+            <label className="grid gap-2">
+              <span className="text-sm font-black text-black">Experience Level</span>
+              <input
+                value={form.experienceLevel}
+                onChange={(event) => updateField("experienceLevel", event.target.value)}
+                className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+              />
+            </label>
 
-            
+            <label className="grid gap-2">
+              <span className="text-sm font-black text-black">Sort Order</span>
+              <input
+                value={form.sortOrder}
+                onChange={(event) => updateField("sortOrder", event.target.value)}
+                className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+              />
+            </label>
 
-            
+            <label className="grid gap-2 md:col-span-2">
+              <span className="text-sm font-black text-black">Summary</span>
+              <textarea
+                rows={3}
+                value={form.summary}
+                onChange={(event) => updateField("summary", event.target.value)}
+                className="resize-none rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm font-bold leading-7 text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+              />
+            </label>
 
             <label className="grid gap-2 md:col-span-2">
               <span className="text-sm font-black text-black">Job Description</span>
@@ -412,7 +453,15 @@ export default function AdminCareersPage() {
               />
             </label>
 
-            
+            <label className="grid gap-2">
+              <span className="text-sm font-black text-black">Responsibilities</span>
+              <textarea
+                rows={6}
+                value={form.responsibilities}
+                onChange={(event) => updateField("responsibilities", event.target.value)}
+                className="resize-none rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm font-bold leading-7 text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+              />
+            </label>
 
             <label className="grid gap-2">
               <span className="text-sm font-black text-black">Requirements</span>
@@ -421,11 +470,18 @@ export default function AdminCareersPage() {
                 value={form.requirements}
                 onChange={(event) => updateField("requirements", event.target.value)}
                 className="resize-none rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm font-bold leading-7 text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
-                placeholder="Use one requirement per line."
               />
             </label>
 
-            
+            <label className="grid gap-2 md:col-span-2">
+              <span className="text-sm font-black text-black">Benefits</span>
+              <textarea
+                rows={4}
+                value={form.benefits}
+                onChange={(event) => updateField("benefits", event.target.value)}
+                className="resize-none rounded-2xl border border-black/5 bg-white px-4 py-3 text-sm font-bold leading-7 text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+              />
+            </label>
 
             <label className="grid gap-2">
               <span className="text-sm font-black text-black">Apply Email</span>
@@ -433,7 +489,6 @@ export default function AdminCareersPage() {
                 value={form.applyEmail}
                 onChange={(event) => updateField("applyEmail", event.target.value)}
                 className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
-                placeholder="hr@pharmametriclabs.com"
               />
             </label>
 
@@ -443,7 +498,6 @@ export default function AdminCareersPage() {
                 value={form.applyUrl}
                 onChange={(event) => updateField("applyUrl", event.target.value)}
                 className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
-                placeholder="https://..."
               />
             </label>
 
@@ -469,6 +523,24 @@ export default function AdminCareersPage() {
                 <option value="ARCHIVED">Archived</option>
               </select>
             </label>
+          </div>
+
+          <div className="mt-6">
+            <MediaPicker
+              value={form.featuredImage}
+              onChange={(url) => updateField("featuredImage", url)}
+              onReferenceChange={(reference) =>
+                setForm((current) => ({
+                  ...current,
+                  featuredImage: reference?.url || "",
+                  featuredMedia: reference,
+                }))
+              }
+              folder="careers"
+              title="Career Featured Image"
+              description="Choose a reusable image from the PML Media Library. Card Image is recommended for the public Careers page."
+              defaultVariant="card"
+            />
           </div>
 
           {message ? (
