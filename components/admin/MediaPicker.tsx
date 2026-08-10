@@ -40,6 +40,7 @@ type MediaPickerProps = {
   value: string;
   onChange: (url: string) => void;
   onReferenceChange?: (reference: MediaReference | null) => void;
+  allowManualUrl?: boolean;
   folder?: string;
   title?: string;
   description?: string;
@@ -168,6 +169,7 @@ export default function MediaPicker({
   value,
   onChange,
   onReferenceChange,
+  allowManualUrl = true,
   folder = "general",
   title = "Featured Image",
   description = "Upload a new image, choose an existing asset, or keep a manual URL.",
@@ -677,27 +679,29 @@ export default function MediaPicker({
         </div>
       ) : null}
 
-      <div className="mt-5 rounded-[22px] border border-black/5 bg-[#fbfdfb] p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-black text-black">Manual URL</p>
-            <p className="mt-1 text-xs text-black/40">
-              Kept for legacy content and externally hosted images.
-            </p>
+      {allowManualUrl ? (
+        <div className="mt-5 rounded-[22px] border border-black/5 bg-[#fbfdfb] p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-black text-black">Manual URL</p>
+              <p className="mt-1 text-xs text-black/40">
+                Kept for legacy content and externally hosted images.
+              </p>
+            </div>
+            <span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-black/35">
+              Optional
+            </span>
           </div>
-          <span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-black/35">
-            Optional
-          </span>
+          <input
+            value={value}
+            onChange={(event) =>
+              emitReference(createMediaReference(event.target.value))
+            }
+            placeholder="https://… or /images/…"
+            className="mt-3 h-12 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-bold text-black outline-none transition placeholder:text-black/20 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
+          />
         </div>
-        <input
-          value={value}
-          onChange={(event) =>
-            emitReference(createMediaReference(event.target.value))
-          }
-          placeholder="https://… or /images/…"
-          className="mt-3 h-12 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-bold text-black outline-none transition placeholder:text-black/20 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
-        />
-      </div>
+      ) : null}
 
       {message ? (
         <div className="mt-4 rounded-2xl border border-[#039147]/15 bg-[#eaf8f0] px-4 py-3 text-sm font-bold text-[#02783b]">

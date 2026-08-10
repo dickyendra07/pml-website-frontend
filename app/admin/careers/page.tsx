@@ -83,6 +83,14 @@ function toIsoOrNull(value: string) {
 }
 
 function mapCareerToForm(item: AdminCareerItem): CareerForm {
+  const legacyFeaturedImage =
+    item.featuredImage || item.featuredMedia?.url || "";
+  const featuredMedia =
+    item.featuredReference ||
+    createMediaReference(legacyFeaturedImage, {
+      mediaId: item.featuredMediaId || item.featuredMedia?.id,
+    });
+
   return {
     id: item.id,
     title: item.title || "",
@@ -98,12 +106,8 @@ function mapCareerToForm(item: AdminCareerItem): CareerForm {
     benefits: item.benefits || "",
     applyEmail: item.applyEmail || "",
     applyUrl: item.applyUrl || "",
-    featuredImage: item.featuredImage || "",
-    featuredMedia:
-      item.featuredReference ||
-      createMediaReference(item.featuredImage, {
-        mediaId: item.featuredMediaId,
-      }),
+    featuredImage: featuredMedia?.url || legacyFeaturedImage,
+    featuredMedia,
     status: item.status,
     sortOrder: String(item.sortOrder ?? 0),
     publishedAt: toDateTimeLocal(item.publishedAt),
@@ -540,6 +544,7 @@ export default function AdminCareersPage() {
               title="Career Featured Image"
               description="Choose a reusable image from the PML Media Library. Card Image is recommended for the public Careers page."
               defaultVariant="card"
+              allowManualUrl={false}
             />
           </div>
 
@@ -548,24 +553,6 @@ export default function AdminCareersPage() {
               {message}
             </div>
           ) : null}
-
-          <div className="mt-6">
-            <MediaPicker
-              value={form.featuredImage}
-              onChange={(url) => updateField("featuredImage", url)}
-              onReferenceChange={(reference) =>
-                setForm((current) => ({
-                  ...current,
-                  featuredImage: reference?.url || "",
-                  featuredMedia: reference,
-                }))
-              }
-              folder="careers"
-              title="Career Featured Image"
-              description="Choose a reusable image from the PML Media Library. Card Image is recommended for the public Careers page."
-              defaultVariant="card"
-            />
-          </div>
 
           <div className="mt-8 flex flex-col gap-3 rounded-[24px] border border-black/5 bg-white5 p-3 sm:flex-row sm:justify-end">
             {form.id ? (
