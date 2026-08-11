@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const isProduction = process.env.NODE_ENV === "production";
+const isVercel = process.env.VERCEL === "1";
 const mediaOrigins = [
   process.env.NEXT_PUBLIC_MEDIA_URL,
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, ""),
@@ -68,7 +69,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Vercel's Next.js adapter owns the deployment output on Vercel. Keep the
+  // standalone bundle for the Docker image, where the generated server.js is
+  // the runtime entrypoint.
+  output: isVercel ? undefined : "standalone",
   poweredByHeader: false,
 
   images: {
