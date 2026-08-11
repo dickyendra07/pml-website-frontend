@@ -11,23 +11,11 @@ import {
   getCurrentAdmin,
   logoutAdmin,
 } from "@/lib/admin-api";
-
-const navItems = [
-  { label: "Dashboard", href: "/admin", icon: "D" },
-  { label: "Inquiries", href: "/admin/inquiries", icon: "I" },
-  { label: "Homepage", href: "/admin/homepage-features", icon: "H" },
-  { label: "Catalogues", href: "/admin/catalogues", icon: "C" },
-  { label: "Catalogue Requests", href: "/admin/catalogue-requests", icon: "R" },
-  { label: "Insights", href: "/admin/insights", icon: "N" },
-  { label: "Careers", href: "/admin/careers", icon: "J" },
-  { label: "Career Documentation", href: "/admin/career-documentation", icon: "K" },
-  { label: "Facilities", href: "/admin/facilities", icon: "F" },
-  { label: "Media", href: "/admin/media", icon: "M" },
-  { label: "Popups", href: "/admin/popups", icon: "P" },
-  { label: "Legal Pages", href: "/admin/legal-pages", icon: "L" },
-  { label: "Settings", href: "/admin/settings", icon: "S" },
-  { label: "System Health", href: "/admin/health", icon: "+" },
-];
+import {
+  ADMIN_NAV_ITEMS,
+  hasAdminPermission,
+  permissionForAdminPath,
+} from "@/lib/admin-rbac";
 
 type AdminShellProps = {
   children: ReactNode;
@@ -100,6 +88,46 @@ export default function AdminShell({ children }: AdminShellProps) {
     );
   }
 
+  const requiredPermission = permissionForAdminPath(pathname);
+
+  if (
+    admin &&
+    requiredPermission &&
+    !hasAdminPermission(admin, requiredPermission)
+  ) {
+    return (
+      <main className="relative flex min-h-screen items-center justify-center bg-[#f6faf7] px-6 text-black">
+        <div className="pml-hex-pattern absolute inset-0 opacity-[0.035]" />
+        <section className="relative w-full max-w-2xl rounded-[34px] border border-black/5 bg-white p-8 text-center shadow-[0_28px_90px_rgba(0,0,0,0.10)] md:p-12">
+          <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-red-50 text-xl font-black text-red-700">
+            403
+          </span>
+          <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-[#039147]">
+            Akses dibatasi
+          </p>
+          <h1 className="mt-3 text-3xl font-black tracking-tight">
+            Anda tidak memiliki permission untuk halaman ini
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-sm font-semibold leading-7 text-black/55">
+            Menu dan URL CMS hanya dapat dibuka sesuai role yang ditetapkan. Hubungi Super Admin jika akses ini diperlukan.
+          </p>
+          <Link
+            href="/admin"
+            className="mt-7 inline-flex rounded-full bg-[#039147] px-6 py-3 text-sm font-black text-white"
+          >
+            Kembali ke Dashboard
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
+  const visibleNavItems = admin
+    ? ADMIN_NAV_ITEMS.filter((item) =>
+        hasAdminPermission(admin, item.permission),
+      )
+    : [];
+
   return (
     <main className="min-h-screen bg-[#f6faf7] text-black">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(3,145,71,0.10),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(3,145,71,0.08),transparent_34%)]" />
@@ -122,7 +150,7 @@ export default function AdminShell({ children }: AdminShellProps) {
           </div>
 
           <nav className="mt-6 grid gap-2">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const active = pathname === item.href;
 
               return (
@@ -155,7 +183,7 @@ export default function AdminShell({ children }: AdminShellProps) {
             <p className="mt-2 text-sm font-black text-black">{admin?.name}</p>
             <p className="mt-1 break-all text-xs font-semibold text-black/45">{admin?.email}</p>
             <span className="mt-3 inline-flex rounded-full border border-[#039147]/20 bg-[#eaf8f0] px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-[#039147]">
-              {admin?.role}
+              {admin?.roleName}
             </span>
           </div>
 

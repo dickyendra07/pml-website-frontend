@@ -5,6 +5,9 @@ export type AdminUser = {
   name: string;
   email: string;
   role: string;
+  roleId: string | null;
+  roleName: string;
+  permissions: string[];
 };
 
 export type AdminLoginResult = {
@@ -1389,7 +1392,7 @@ export async function getApiHealth() {
     throw new Error("Admin session is not available.");
   }
 
-  const response = await fetch(`${API_BASE_URL}/health`, {
+  const response = await fetch(`${API_BASE_URL}/admin/health`, {
     cache: "no-store",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -1453,4 +1456,155 @@ export async function updateAdminLegalPage(
   );
 
   return parseJsonResponse<LegalPage>(response);
+}
+
+export type CmsRole = {
+  id: string;
+  key: string;
+  name: string;
+  description: string | null;
+  permissions: string[];
+  isSystem: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    users: number;
+  };
+};
+
+export type ManagedAdminUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  roleId: string | null;
+  isActive: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  assignedRole: Pick<CmsRole, "id" | "key" | "name" | "permissions"> | null;
+};
+
+export type AdminUserPayload = {
+  name: string;
+  email: string;
+  roleId: string;
+  isActive: boolean;
+  password?: string;
+};
+
+export type CmsRolePayload = {
+  name: string;
+  description?: string;
+  permissions: string[];
+};
+
+export type PermissionCatalogue = {
+  groups: Array<{
+    module: string;
+    permissions: string[];
+  }>;
+  permissions: string[];
+};
+
+export async function getAdminUsers(token: string) {
+  const response = await fetch(`${API_BASE_URL}/admin/users`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  return parseJsonResponse<ManagedAdminUser[]>(response);
+}
+
+export async function getAssignableAdminRoles(token: string) {
+  const response = await fetch(`${API_BASE_URL}/admin/users/roles`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  return parseJsonResponse<CmsRole[]>(response);
+}
+
+export async function createAdminUser(
+  token: string,
+  payload: AdminUserPayload & { password: string },
+) {
+  const response = await fetch(`${API_BASE_URL}/admin/users`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseJsonResponse<ManagedAdminUser>(response);
+}
+
+export async function updateManagedAdminUser(
+  token: string,
+  id: string,
+  payload: Partial<AdminUserPayload>,
+) {
+  const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseJsonResponse<ManagedAdminUser>(response);
+}
+
+export async function getAdminRoles(token: string) {
+  const response = await fetch(`${API_BASE_URL}/admin/roles`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  return parseJsonResponse<CmsRole[]>(response);
+}
+
+export async function getPermissionCatalogue(token: string) {
+  const response = await fetch(`${API_BASE_URL}/admin/roles/permissions`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  return parseJsonResponse<PermissionCatalogue>(response);
+}
+
+export async function createAdminRole(
+  token: string,
+  payload: CmsRolePayload,
+) {
+  const response = await fetch(`${API_BASE_URL}/admin/roles`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseJsonResponse<CmsRole>(response);
+}
+
+export async function updateAdminRole(
+  token: string,
+  id: string,
+  payload: Partial<CmsRolePayload>,
+) {
+  const response = await fetch(`${API_BASE_URL}/admin/roles/${id}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseJsonResponse<CmsRole>(response);
 }

@@ -5,7 +5,18 @@ import { useEffect, useMemo, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
 import InquiryTable from "@/components/admin/InquiryTable";
-import { getAdminProposals, getAdminToken, ProposalSubmission } from "@/lib/admin-api";
+import {
+  AdminUser,
+  getAdminProposals,
+  getAdminToken,
+  getCurrentAdmin,
+  ProposalSubmission,
+} from "@/lib/admin-api";
+import {
+  ADMIN_PERMISSIONS,
+  AdminPermission,
+  hasAdminPermission,
+} from "@/lib/admin-rbac";
 
 const cmsModules = [
   {
@@ -14,6 +25,7 @@ const cmsModules = [
     desc: "Review proposal, contact, and catalogue request submissions.",
     icon: "I",
     tone: "from-[#eaf8f0] to-white",
+    permission: ADMIN_PERMISSIONS.INQUIRIES_READ,
   },
   {
     label: "Homepage",
@@ -21,6 +33,7 @@ const cmsModules = [
     desc: "Manage homepage highlights, CTA cards, and featured campaign content.",
     icon: "H",
     tone: "from-[#eaf8f0] to-white",
+    permission: ADMIN_PERMISSIONS.HOMEPAGE_FEATURES_READ,
   },
   {
     label: "Catalogues",
@@ -28,6 +41,7 @@ const cmsModules = [
     desc: "Manage catalogue items, PDF files, download mode, and requests.",
     icon: "C",
     tone: "from-[#fff4f3] to-white",
+    permission: ADMIN_PERMISSIONS.CATALOGUES_READ,
   },
   {
     label: "Insights",
@@ -35,6 +49,23 @@ const cmsModules = [
     desc: "Create and manage articles, news, publications, and FAQ content.",
     icon: "N",
     tone: "from-[#eaf8f0] to-white",
+    permission: ADMIN_PERMISSIONS.INSIGHTS_READ,
+  },
+  {
+    label: "Careers",
+    href: "/admin/careers",
+    desc: "Manage vacancies, requirements, benefits, and publication status.",
+    icon: "J",
+    tone: "from-white to-[#eaf8f0]",
+    permission: ADMIN_PERMISSIONS.CAREERS_READ,
+  },
+  {
+    label: "Career Documentation",
+    href: "/admin/career-documentation",
+    desc: "Manage career galleries and documentation shown on the public site.",
+    icon: "K",
+    tone: "from-[#eaf8f0] to-white",
+    permission: ADMIN_PERMISSIONS.CAREER_DOCUMENTATION_READ,
   },
   {
     label: "Media",
@@ -42,6 +73,7 @@ const cmsModules = [
     desc: "Upload, organize, preview, and copy media asset URLs.",
     icon: "M",
     tone: "from-white to-[#eaf8f0]",
+    permission: ADMIN_PERMISSIONS.MEDIA_READ,
   },
   {
     label: "Popups",
@@ -49,6 +81,7 @@ const cmsModules = [
     desc: "Manage homepage announcement popup, image, layout, and schedule.",
     icon: "P",
     tone: "from-[#eaf8f0] to-[#fff4f3]",
+    permission: ADMIN_PERMISSIONS.POPUPS_READ,
   },
   {
     label: "Settings",
@@ -56,6 +89,7 @@ const cmsModules = [
     desc: "Update website settings, public information, and configuration values.",
     icon: "S",
     tone: "from-white to-[#f6faf7]",
+    permission: ADMIN_PERMISSIONS.SETTINGS_READ,
   },
   {
     label: "System Health",
@@ -63,11 +97,20 @@ const cmsModules = [
     desc: "Monitor API, PostgreSQL, Redis, environment, and backend uptime.",
     icon: "+",
     tone: "from-[#eaf8f0] to-white",
+    permission: ADMIN_PERMISSIONS.SYSTEM_HEALTH_READ,
   },
-];
+] satisfies Array<{
+  label: string;
+  href: string;
+  desc: string;
+  icon: string;
+  tone: string;
+  permission: AdminPermission;
+}>;
 
 export default function AdminDashboardPage() {
   const [items, setItems] = useState<ProposalSubmission[]>([]);
+  const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
 
@@ -76,8 +119,16 @@ export default function AdminDashboardPage() {
 
     if (!token) return;
 
-    getAdminProposals(token)
-      .then((data) => {
+    getCurrentAdmin(token)
+      .then(async (user) => {
+        setAdmin(user);
+
+        if (!hasAdminPermission(user, ADMIN_PERMISSIONS.INQUIRIES_READ)) {
+          setStatus("success");
+          return;
+        }
+
+        const data = await getAdminProposals(token);
         setItems(data);
         setStatus("success");
       })
@@ -101,6 +152,19 @@ export default function AdminDashboardPage() {
     ];
   }, [items]);
 
+  const canReadInquiries = Boolean(
+    admin && hasAdminPermission(admin, ADMIN_PERMISSIONS.INQUIRIES_READ),
+  );
+  const visibleModules = useMemo(
+    () =>
+      admin
+        ? cmsModules.filter((module) =>
+            hasAdminPermission(admin, module.permission),
+          )
+        : [],
+    [admin],
+  );
+
   return (
     <AdminShell>
       <div className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
@@ -116,15 +180,17 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        <Link
-          href="/admin/media"
-          className="w-fit rounded-full bg-[#039147] px-6 py-3 text-sm font-black text-white shadow-[0_18px_50px_rgba(3,145,71,0.22)] transition hover:-translate-y-0.5"
-        >
-          Upload Media
-        </Link>
+        {admin && hasAdminPermission(admin, ADMIN_PERMISSIONS.MEDIA_WRITE) ? (
+          <Link
+            href="/admin/media"
+            className="w-fit rounded-full bg-[#039147] px-6 py-3 text-sm font-black text-white shadow-[0_18px_50px_rgba(3,145,71,0.22)] transition hover:-translate-y-0.5"
+          >
+            Upload Media
+          </Link>
+        ) : null}
       </div>
 
-      <div className="mb-8 grid gap-4 md:grid-cols-4">
+      {canReadInquiries ? <div className="mb-8 grid gap-4 md:grid-cols-4">
         {summary.map((item) => (
           <article
             key={item.label}
@@ -135,7 +201,7 @@ export default function AdminDashboardPage() {
             <p className="mt-2 text-xs font-semibold text-black/50">{item.desc}</p>
           </article>
         ))}
-      </div>
+      </div> : null}
 
       <section className="mb-8 rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_22px_70px_rgba(0,0,0,0.08)] backdrop-blur md:p-7">
         <div className="mb-6 flex flex-col justify-between gap-3 md:flex-row md:items-end">
@@ -149,12 +215,12 @@ export default function AdminDashboardPage() {
           </div>
 
           <span className="w-fit rounded-full border border-black/5 bg-[#f6faf7] px-4 py-2 text-xs font-black text-black/50">
-            {cmsModules.length} modules active
+            {visibleModules.length} modules available
           </span>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {cmsModules.map((module) => (
+          {visibleModules.map((module) => (
             <Link
               key={module.href}
               href={module.href}
@@ -183,9 +249,15 @@ export default function AdminDashboardPage() {
             </Link>
           ))}
         </div>
+
+        {admin && visibleModules.length === 0 ? (
+          <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-5 text-sm font-bold leading-7 text-amber-900">
+            Akun ini belum memiliki akses module. Hubungi Super Admin untuk menetapkan role yang sesuai.
+          </div>
+        ) : null}
       </section>
 
-      <section className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_22px_70px_rgba(0,0,0,0.08)] backdrop-blur md:p-7">
+      {canReadInquiries ? <section className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_22px_70px_rgba(0,0,0,0.08)] backdrop-blur md:p-7">
         <div className="mb-6 flex flex-col justify-between gap-3 md:flex-row md:items-end">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#039147]">
@@ -219,7 +291,7 @@ export default function AdminDashboardPage() {
         {status === "success" && items.length > 0 ? (
           <InquiryTable items={items.slice(0, 8)} />
         ) : null}
-      </section>
+      </section> : null}
     </AdminShell>
   );
 }
