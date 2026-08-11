@@ -8,7 +8,6 @@ type InsightSidebarProps = {
 };
 
 export default function InsightSidebar({
-  category,
   locale,
 }: InsightSidebarProps) {
   return (

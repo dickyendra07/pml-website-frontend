@@ -89,6 +89,19 @@ const certifications = [
   },
 ];
 
+const certificationTitlesId: Record<string, string> = {
+  "Plenary Accreditation from the Ministry of Health of the Republic of Indonesia":
+    "Akreditasi Paripurna dari Kementerian Kesehatan Republik Indonesia",
+  "Foreign Bioequivalence Centre Accreditation from the National Pharmaceutical Regulatory Agency Malaysia":
+    "Akreditasi Foreign Bioequivalence Centre dari National Pharmaceutical Regulatory Agency Malaysia",
+};
+
+function getCertificationTitle(title: string, locale: Locale) {
+  if (locale !== "id") return title;
+
+  return certificationTitlesId[title] ?? title;
+}
+
 const factsEn = [
   { number: 20, suffix: "+", label: "years experience" },
   { number: 6000, suffix: "+", label: "completed projects" },
@@ -1194,15 +1207,7 @@ export default function AboutUsPage({ locale }: AboutUsPageProps) {
                 </div>
 
                 <h3 className="mt-4 text-2xl font-black leading-tight tracking-[-0.025em] text-black md:text-xl">
-                  {isIndonesian
-                    ? item.title ===
-                      "Plenary Accreditation from the Ministry of Health of the Republic of Indonesia"
-                      ? "Akreditasi Paripurna dari Kementerian Kesehatan Republik Indonesia"
-                      : item.title ===
-                          "Foreign Bioequivalence Centre Accreditation from the National Pharmaceutical Regulatory Agency Malaysia"
-                        ? "Akreditasi Foreign Bioequivalence Centre dari National Pharmaceutical Regulatory Agency Malaysia"
-                        : item.title
-                    : item.title}
+                  {getCertificationTitle(item.title, locale)}
                 </h3>
               </article>
             ))}

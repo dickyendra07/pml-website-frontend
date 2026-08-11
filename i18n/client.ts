@@ -36,5 +36,7 @@ export function localizeHref(href: string, locale: Locale) {
     return href;
   }
 
-  return `/${locale}${href.startsWith("/") ? href : `/${href}`}`;
+  const normalizedHref = href.startsWith("/") ? href : `/${href}`;
+
+  return `/${locale}${normalizedHref}`;
 }

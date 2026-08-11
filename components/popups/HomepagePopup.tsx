@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { localizeHref } from "@/i18n/client";
 import type { Locale } from "@/i18n/config";
 import { resolveMediaUrl, type MediaSource } from "@/lib/media";
 
 type PopupLayout = "IMAGE_LEFT" | "IMAGE_RIGHT" | "IMAGE_TOP" | "TEXT_ONLY";
+type PopupFrequency = "ONCE_PER_SESSION" | "ONCE_PER_DAY" | "ALWAYS";
 
 type PopupItem = {
   id: string;
@@ -17,7 +18,7 @@ type PopupItem = {
   buttonLabel: string | null;
   buttonUrl: string | null;
   imageUrl: string | null;
-  frequency: "ONCE_PER_SESSION" | "ONCE_PER_DAY" | "ALWAYS" | string;
+  frequency: PopupFrequency;
   layout?: PopupLayout | null;
 };
 
@@ -69,6 +70,32 @@ function markPopupClosed(popup: PopupItem) {
   }
 }
 
+function getPopupLayoutConfig(layout: PopupLayout) {
+  const textOnly = layout === "TEXT_ONLY";
+  let shellClass = "grid";
+
+  if (layout === "IMAGE_RIGHT") {
+    shellClass = "grid md:grid-cols-[1.05fr_0.95fr]";
+  } else if (layout === "IMAGE_LEFT") {
+    shellClass = "grid md:grid-cols-[0.95fr_1.05fr]";
+  }
+
+  return {
+    shellClass,
+    imageHeight:
+      layout === "IMAGE_TOP"
+        ? "min-h-[220px] md:min-h-[320px]"
+        : "min-h-[190px] md:min-h-[420px]",
+    imageSizes:
+      layout === "IMAGE_TOP" ? "920px" : "(max-width: 768px) 100vw, 460px",
+    contentAlignment: textOnly ? "text-center" : "",
+    descriptionWidth: textOnly ? "mx-auto max-w-2xl" : "",
+    actionAlignment: textOnly ? "justify-center" : "",
+    modalWidth: textOnly ? "max-w-[680px]" : "max-w-[920px]",
+    imageAfterContent: layout === "IMAGE_RIGHT",
+  };
+}
+
 type HomepagePopupProps = {
   locale: Locale;
 };
@@ -83,24 +110,9 @@ export default function HomepagePopup({ locale }: HomepagePopupProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   const layout = popup?.layout || "IMAGE_LEFT";
+  const layoutConfig = getPopupLayoutConfig(layout);
   const imageUrl = resolveMediaUrl(popup?.imageUrl);
   const hasImage = Boolean(imageUrl) && layout !== "TEXT_ONLY";
-
-  const shellClassName = useMemo(() => {
-    if (layout === "IMAGE_TOP") {
-      return "grid";
-    }
-
-    if (layout === "TEXT_ONLY") {
-      return "grid";
-    }
-
-    if (layout === "IMAGE_RIGHT") {
-      return "grid md:grid-cols-[1.05fr_0.95fr]";
-    }
-
-    return "grid md:grid-cols-[0.95fr_1.05fr]";
-  }, [layout]);
 
   useEffect(() => {
     let isMounted = true;
@@ -163,20 +175,14 @@ export default function HomepagePopup({ locale }: HomepagePopupProps) {
 
   const imageBlock = hasImage ? (
     <div
-      className={`relative overflow-hidden bg-black ${
-        layout === "IMAGE_TOP"
-          ? "min-h-[220px] md:min-h-[320px]"
-          : "min-h-[190px] md:min-h-[420px]"
-      }`}
+      className={`relative overflow-hidden bg-black ${layoutConfig.imageHeight}`}
     >
       <Image
         src={imageUrl}
         alt=""
         fill
         priority={false}
-        sizes={
-          layout === "IMAGE_TOP" ? "920px" : "(max-width: 768px) 100vw, 460px"
-        }
+        sizes={layoutConfig.imageSizes}
         className="object-cover opacity-90"
         unoptimized={
           imageUrl.startsWith("http://localhost") ||
@@ -200,7 +206,7 @@ export default function HomepagePopup({ locale }: HomepagePopupProps) {
 
   const contentBlock = (
     <div
-      className={`bg-white p-6 md:p-10 lg:p-12 ${layout === "TEXT_ONLY" ? "text-center" : ""}`}
+      className={`bg-white p-6 md:p-10 lg:p-12 ${layoutConfig.contentAlignment}`}
     >
       <p className="inline-flex rounded-full bg-[#eaf8f0] px-4 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#039147]">
         {t("Announcement", "Pengumuman")}
@@ -212,18 +218,14 @@ export default function HomepagePopup({ locale }: HomepagePopupProps) {
 
       {popup.description ? (
         <p
-          className={`mt-5 text-sm font-medium leading-7 text-black/60 md:text-base md:leading-8 ${
-            layout === "TEXT_ONLY" ? "mx-auto max-w-2xl" : ""
-          }`}
+          className={`mt-5 text-sm font-medium leading-7 text-black/60 md:text-base md:leading-8 ${layoutConfig.descriptionWidth}`}
         >
           {popup.description}
         </p>
       ) : null}
 
       <div
-        className={`mt-8 flex flex-col gap-3 sm:flex-row ${
-          layout === "TEXT_ONLY" ? "justify-center" : ""
-        }`}
+        className={`mt-8 flex flex-col gap-3 sm:flex-row ${layoutConfig.actionAlignment}`}
       >
         {popup.buttonLabel && popup.buttonUrl ? (
           <Link
@@ -263,9 +265,7 @@ export default function HomepagePopup({ locale }: HomepagePopupProps) {
       aria-label={popup.title}
     >
       <div
-        className={`relative w-full overflow-hidden rounded-[28px] border border-white/15 bg-white shadow-[0_32px_120px_rgba(0,0,0,0.35)] transition-all duration-300 md:rounded-[36px] ${
-          layout === "TEXT_ONLY" ? "max-w-[680px]" : "max-w-[920px]"
-        } ${isVisible ? "translate-y-0 scale-100" : "translate-y-8 scale-[0.98]"}`}
+        className={`relative w-full overflow-hidden rounded-[28px] border border-white/15 bg-white shadow-[0_32px_120px_rgba(0,0,0,0.35)] transition-all duration-300 md:rounded-[36px] ${layoutConfig.modalWidth} ${isVisible ? "translate-y-0 scale-100" : "translate-y-8 scale-[0.98]"}`}
       >
         <button
           type="button"
@@ -276,8 +276,8 @@ export default function HomepagePopup({ locale }: HomepagePopupProps) {
           ×
         </button>
 
-        <div className={shellClassName}>
-          {layout === "IMAGE_RIGHT" ? (
+        <div className={layoutConfig.shellClass}>
+          {layoutConfig.imageAfterContent ? (
             <>
               {contentBlock}
               {imageBlock}

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
@@ -447,12 +448,15 @@ export default function AdminFacilitiesPage() {
                         : "border-black/5 bg-white hover:border-[#039147]/30 hover:bg-[#f6faf7]"
                     }`}
                   >
-                    <div className="mb-4 overflow-hidden rounded-[18px] bg-[#f6faf7]">
+                    <div className="relative mb-4 h-36 overflow-hidden rounded-[18px] bg-[#f6faf7]">
                       {item.image ? (
-                        <img
+                        <Image
                           src={resolveMediaUrl(item.image)}
                           alt={item.titleEn || item.key}
-                          className="h-36 w-full object-cover"
+                          fill
+                          sizes="320px"
+                          className="object-cover"
+                          unoptimized
                         />
                       ) : (
                         <div className="flex h-36 items-center justify-center text-xs font-black uppercase tracking-[0.12em] text-black/25">

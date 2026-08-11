@@ -3,8 +3,8 @@
 import Image from "next/image";
 import {
   ChangeEvent,
-  DragEvent,
   FormEvent,
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
@@ -43,6 +43,13 @@ type UploadQueueItem = {
   name: string;
   progress: number;
   status: "waiting" | "uploading" | "done" | "error";
+};
+
+type VariantPreview = {
+  url: string;
+  name: string;
+  width?: number | null;
+  height?: number | null;
 };
 
 const emptyForm: MediaForm = {
@@ -85,6 +92,88 @@ function formatDate(value?: string | null) {
   }).format(new Date(value));
 }
 
+function formatAspectRatio(width?: number | null, height?: number | null) {
+  if (!width || !height) return "-";
+
+  return `${(width / height).toFixed(2)}:1`;
+}
+
+function getUploadStatusClass(status: UploadQueueItem["status"]) {
+  if (status === "done") return "text-[#039147]";
+  if (status === "error") return "text-red-500";
+
+  return "text-black/40";
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function Show({ when, children }: { when: boolean; children: ReactNode }) {
+  return when ? children : null;
+}
+
+function getMessageClass(tone: "success" | "error") {
+  return tone === "error"
+    ? "border-red-200 bg-red-50 text-red-700"
+    : "border-[#039147]/15 bg-[#eaf8f0] text-[#039147]";
+}
+
+function getProgressClass(status: UploadQueueItem["status"]) {
+  return status === "error" ? "bg-red-500" : "bg-[#039147]";
+}
+
+function getUploadLabel(uploading: boolean) {
+  return uploading ? "Uploading..." : "Drop file here or click";
+}
+
+function SelectedMediaPreview({ media }: { media: MediaAssetItem }) {
+  if (media.type === "IMAGE") {
+    const isLogo =
+      media.originalName?.toLowerCase().includes("logo") ||
+      media.filename?.toLowerCase().includes("logo");
+
+    return (
+      <div className="relative h-64">
+        <Image
+          src={getAssetUrl(media.url)}
+          alt={media.altText || media.originalName || media.filename}
+          fill
+          sizes="420px"
+          className={isLogo ? "object-contain p-8" : "object-cover"}
+          unoptimized
+        />
+      </div>
+    );
+  }
+
+  if (media.type === "VIDEO") {
+    return (
+      <video
+        controls
+        className="h-64 w-full bg-black object-contain"
+        src={getAssetUrl(media.url)}
+      />
+    );
+  }
+
+  return (
+    <div className="flex h-44 items-center justify-center">
+      <span className="rounded-full bg-white px-5 py-2 text-sm font-black uppercase tracking-[0.14em] text-black/45">
+        {media.type}
+      </span>
+    </div>
+  );
+}
+
+function getSelectedMediaUrl(media: MediaAssetItem | null) {
+  return media ? getAssetUrl(media.url) : "";
+}
+
+function getVariantPreview(value: VariantPreview | null): VariantPreview {
+  return value || { url: "", name: "", width: null, height: null };
+}
+
 function mapMediaToForm(item: MediaAssetItem): MediaForm {
   return {
     id: item.id,
@@ -123,12 +212,9 @@ export default function AdminMediaPage() {
   const [copiedId, setCopiedId] = useState("");
   const [cropOpen, setCropOpen] = useState(false);
 
-  const [variantPreview, setVariantPreview] = useState<{
-    url: string;
-    name: string;
-    width?: number | null;
-    height?: number | null;
-  } | null>(null);
+  const [variantPreview, setVariantPreview] =
+    useState<VariantPreview | null>(null);
+  const activeVariantPreview = getVariantPreview(variantPreview);
 
   const selectedMedia = useMemo(() => {
     return items.find((item) => item.id === form.id) || null;
@@ -246,11 +332,7 @@ export default function AdminMediaPage() {
     } catch (error) {
       setStatus("error");
       setMessageTone("error");
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Failed to load media library.",
-      );
+      setMessage(getErrorMessage(error, "Failed to load media library."));
     }
   }, []);
 
@@ -415,11 +497,7 @@ export default function AdminMediaPage() {
 
     } catch (error) {
       setMessageTone("error");
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Failed to rename media.",
-      );
+      setMessage(getErrorMessage(error, "Failed to rename media."));
     } finally {
       setSaving(false);
     }
@@ -497,11 +575,7 @@ export default function AdminMediaPage() {
       setMessage("Image crop variant generated successfully.");
       setMessageTone("success");
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Failed to crop image.",
-      );
+      setMessage(getErrorMessage(error, "Failed to crop image."));
       setMessageTone("error");
     } finally {
       setSaving(false);
@@ -562,11 +636,7 @@ export default function AdminMediaPage() {
       await loadMedia();
     } catch (error) {
       setMessageTone("error");
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Failed to update media.",
-      );
+      setMessage(getErrorMessage(error, "Failed to update media."));
     } finally {
       setSaving(false);
     }
@@ -606,11 +676,7 @@ export default function AdminMediaPage() {
       await loadMedia();
     } catch (error) {
       setMessageTone("error");
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Failed to delete media.",
-      );
+      setMessage(getErrorMessage(error, "Failed to delete media."));
     } finally {
       setSaving(false);
     }
@@ -654,34 +720,30 @@ export default function AdminMediaPage() {
 
       </div>
 
-      {status === "loading" ? (
+      <Show when={status === "loading"}>
         <AdminState
           title="Loading media library"
           description="Please wait while the CMS loads media assets."
         />
-      ) : null}
+      </Show>
 
-      {status === "error" ? (
+      <Show when={status === "error"}>
         <AdminState
           title="Unable to load media library"
           description={message}
           tone="error"
         />
-      ) : null}
+      </Show>
 
-      {status === "success" ? (
+      <Show when={status === "success"}>
         <>
-          {message ? (
+          <Show when={Boolean(message)}>
             <div
-              className={`mb-6 rounded-2xl border p-4 text-sm font-bold ${
-                messageTone === "error"
-                  ? "border-red-200 bg-red-50 text-red-700"
-                  : "border-[#039147]/15 bg-[#eaf8f0] text-[#039147]"
-              }`}
+              className={`mb-6 rounded-2xl border p-4 text-sm font-bold ${getMessageClass(messageTone)}`}
             >
               {message}
             </div>
-          ) : null}
+          </Show>
 
           <div className="mb-6 grid gap-4 rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(0,0,0,0.06)] md:grid-cols-[minmax(0,1fr)_220px_180px]">
             <label className="grid gap-2">
@@ -849,9 +911,7 @@ export default function AdminMediaPage() {
             </div>
 
             <p className="mt-4 text-sm font-black text-black">
-              {uploading
-                ? "Uploading..."
-                : "Drop file here or click"}
+              {getUploadLabel(uploading)}
             </p>
 
             <p className="mt-2 text-xs font-bold text-black/40">
@@ -868,7 +928,7 @@ export default function AdminMediaPage() {
             />
           </label>
 
-          {uploadQueue.length > 0 ? (
+          <Show when={uploadQueue.length > 0}>
             <div className="rounded-[24px] border border-black/5 bg-[#f6faf7] p-4">
               <p className="mb-3 text-xs font-black uppercase tracking-[0.14em] text-black/45">
                 Upload Queue
@@ -886,13 +946,7 @@ export default function AdminMediaPage() {
                       </p>
 
                       <span
-                        className={`text-[10px] font-black uppercase ${
-                          upload.status === "done"
-                            ? "text-[#039147]"
-                            : upload.status === "error"
-                              ? "text-red-500"
-                              : "text-black/40"
-                        }`}
+                        className={`text-[10px] font-black uppercase ${getUploadStatusClass(upload.status)}`}
                       >
                         {upload.status}
                       </span>
@@ -900,11 +954,7 @@ export default function AdminMediaPage() {
 
                     <div className="h-2 overflow-hidden rounded-full bg-black/5">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          upload.status === "error"
-                            ? "bg-red-500"
-                            : "bg-[#039147]"
-                        }`}
+                        className={`h-full rounded-full transition-all duration-500 ${getProgressClass(upload.status)}`}
                         style={{
                           width: `${upload.progress}%`,
                         }}
@@ -914,7 +964,7 @@ export default function AdminMediaPage() {
                 ))}
               </div>
             </div>
-          ) : null}
+          </Show>
 
           <label className="grid gap-2">
             <span className="text-xs font-black uppercase tracking-[0.14em] text-black/45">
@@ -1195,39 +1245,7 @@ export default function AdminMediaPage() {
 
 
                   <div className="mb-5 overflow-hidden rounded-[24px] border border-black/5 bg-[#f6faf7]">
-                    {selectedMedia.type === "IMAGE" ? (
-                      <div className="relative h-64">
-                        <Image
-                          src={getAssetUrl(selectedMedia.url)}
-                          alt={
-                            selectedMedia.altText ||
-                            selectedMedia.originalName ||
-                            selectedMedia.filename
-                          }
-                          fill
-                          sizes="420px"
-                          className={
-                            selectedMedia.originalName?.toLowerCase().includes("logo") ||
-                            selectedMedia.filename?.toLowerCase().includes("logo")
-                              ? "object-contain p-8"
-                              : "object-cover"
-                          }
-                          unoptimized
-                        />
-                      </div>
-                    ) : selectedMedia.type === "VIDEO" ? (
-                      <video
-                        controls
-                        className="h-64 w-full bg-black object-contain"
-                        src={getAssetUrl(selectedMedia.url)}
-                      />
-                    ) : (
-                      <div className="flex h-44 items-center justify-center">
-                        <span className="rounded-full bg-white px-5 py-2 text-sm font-black uppercase tracking-[0.14em] text-black/45">
-                          {selectedMedia.type}
-                        </span>
-                      </div>
-                    )}
+                    <SelectedMediaPreview media={selectedMedia} />
 
                     <div className="p-4">
                       <p className="break-all text-sm font-black text-black">
@@ -1261,7 +1279,9 @@ export default function AdminMediaPage() {
                       </span>
                     </div>
 
-                    {selectedMedia.width && selectedMedia.height ? (
+                    <Show
+                      when={Boolean(selectedMedia.width && selectedMedia.height)}
+                    >
                       <>
                         <div className="flex justify-between gap-3">
                           <span className="font-bold text-black/40">
@@ -1277,11 +1297,14 @@ export default function AdminMediaPage() {
                             Aspect Ratio
                           </span>
                           <span className="font-black text-black">
-                            {(selectedMedia.width / selectedMedia.height).toFixed(2)}:1
+                            {formatAspectRatio(
+                              selectedMedia.width,
+                              selectedMedia.height,
+                            )}
                           </span>
                         </div>
                       </>
-                    ) : null}
+                    </Show>
 
                     <div className="flex justify-between gap-3">
                       <span className="font-bold text-black/40">
@@ -1304,7 +1327,7 @@ export default function AdminMediaPage() {
                   </div>
 
 
-                  {selectedMedia.variants?.length ? (
+                  <Show when={Boolean(selectedMedia.variants?.length)}>
                     <div className="mb-5 rounded-[22px] border border-black/5 bg-white p-4">
 
                       <p className="mb-4 text-xs font-black uppercase tracking-[0.14em] text-[#039147]">
@@ -1421,9 +1444,9 @@ export default function AdminMediaPage() {
                       </div>
 
                     </div>
-                  ) : null}
+                  </Show>
 
-                  {selectedMedia.type === "IMAGE" ? (
+                  <Show when={selectedMedia.type === "IMAGE"}>
                     <div className="mb-5">
                       <button
                         type="button"
@@ -1433,7 +1456,7 @@ export default function AdminMediaPage() {
                         Crop Image
                       </button>
                     </div>
-                  ) : null}
+                  </Show>
 
                   <div className="mb-5 flex flex-col gap-3 sm:flex-row">
                     <button
@@ -1640,32 +1663,32 @@ export default function AdminMediaPage() {
             </section>
           </div>
         </>
-      ) : null}
-      {cropOpen && selectedMedia ? (
+      </Show>
+      <Show when={Boolean(cropOpen && selectedMedia)}>
         <MediaCropModal
-          imageUrl={getAssetUrl(selectedMedia.url)}
+          imageUrl={getSelectedMediaUrl(selectedMedia)}
           onClose={() => setCropOpen(false)}
           onSave={handleCropSave}
         />
-      ) : null}
+      </Show>
 
 
-      {variantPreview ? (
+      <Show when={Boolean(variantPreview)}>
         <MediaVariantPreviewModal
           open={Boolean(variantPreview)}
-          url={variantPreview.url}
-          name={variantPreview.name}
-          width={variantPreview.width}
-          height={variantPreview.height}
+          url={activeVariantPreview.url}
+          name={activeVariantPreview.name}
+          width={activeVariantPreview.width}
+          height={activeVariantPreview.height}
           onClose={() => setVariantPreview(null)}
-          onCopy={() => void handleVariantCopy(variantPreview.url)}
+          onCopy={() => void handleVariantCopy(activeVariantPreview.url)}
           onUse={() => {
             setMessage("Variant image ready to use.");
             setMessageTone("success");
             setVariantPreview(null);
           }}
         />
-      ) : null}
+      </Show>
 
     </AdminShell>
   );

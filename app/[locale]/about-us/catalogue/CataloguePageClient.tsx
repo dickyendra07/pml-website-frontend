@@ -12,8 +12,8 @@ import { localizeHref } from "@/i18n/client";
 import type { Locale } from "@/i18n/config";
 import { resolveMediaUrl } from "@/lib/media";
 
-function getCatalogueMessage(catalogue: CatalogueItem, isIndonesian: boolean) {
-  return isIndonesian
+function getCatalogueMessage(catalogue: CatalogueItem, locale: Locale) {
+  return locale === "id"
     ? `Mohon kirimkan ${catalogue.title} resmi terbaru.`
     : `Please send the latest official ${catalogue.title}.`;
 }
@@ -103,7 +103,7 @@ export default function CataloguePage({ locale }: CataloguePageProps) {
         company: requestCompany || undefined,
         email: requestEmail,
         phone: requestPhone || undefined,
-        message: getCatalogueMessage(selectedCatalogue, isIndonesian),
+        message: getCatalogueMessage(selectedCatalogue, locale),
         locale,
         sourcePage: `/${locale}/about-us/catalogue`,
       });

@@ -18,6 +18,7 @@ type PublicHealthResult = {
 };
 
 type PageStatus = "loading" | "success" | "error";
+type Translate = (english: string, indonesian: string) => string;
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
 
@@ -26,6 +27,52 @@ function formatDate(value: string, isIndonesian: boolean) {
     dateStyle: "medium",
     timeStyle: "medium",
   }).format(new Date(value));
+}
+
+function getOverallPresentation(
+  status: PageStatus,
+  operational: boolean,
+  t: Translate,
+) {
+  if (status === "loading") {
+    return {
+      panelClass: "border-black/[0.05] bg-white",
+      indicatorClass: "animate-pulse bg-black/25",
+      title: t("Checking monitored services", "Memeriksa layanan yang dipantau"),
+      badgeClass: "border-black/[0.04] bg-white text-black/30",
+      badgeLabel: "...",
+    };
+  }
+
+  if (operational) {
+    return {
+      panelClass:
+        "border-[#039147]/10 bg-gradient-to-br from-white via-white to-[#eaf8f0]",
+      indicatorClass:
+        "bg-[#039147] shadow-[0_0_0_8px_rgba(3,145,71,0.10)]",
+      title: t(
+        "All monitored services are operational",
+        "Seluruh layanan yang dipantau beroperasi normal",
+      ),
+      badgeClass:
+        "border-[#e2f5ea] bg-[#039147] text-white shadow-[0_28px_75px_rgba(3,145,71,0.30)]",
+      badgeLabel: "OK",
+    };
+  }
+
+  return {
+    panelClass:
+      "border-red-100 bg-gradient-to-br from-white via-white to-red-50",
+    indicatorClass:
+      "bg-red-500 shadow-[0_0_0_8px_rgba(239,68,68,0.10)]",
+    title: t(
+      "One or more services require attention",
+      "Satu atau beberapa layanan memerlukan perhatian",
+    ),
+    badgeClass:
+      "border-red-100 bg-red-500 text-white shadow-[0_28px_75px_rgba(239,68,68,0.25)]",
+    badgeLabel: "!",
+  };
 }
 
 function StatusIcon({
@@ -297,6 +344,7 @@ export default function SystemStatusClient({
   }, [loadHealth]);
 
   const operational = status === "success" && health?.status === "operational";
+  const overallPresentation = getOverallPresentation(status, operational, t);
 
   const services = health
     ? [
@@ -393,13 +441,7 @@ export default function SystemStatusClient({
       <section className="px-5 py-10 md:px-8 md:py-14 xl:px-12">
         <div className="mx-auto w-full max-w-[1680px]">
           <section
-            className={`relative overflow-hidden rounded-[34px] border p-7 shadow-[0_30px_100px_rgba(18,58,38,0.10)] md:p-10 xl:p-12 ${
-              status === "loading"
-                ? "border-black/[0.05] bg-white"
-                : operational
-                  ? "border-[#039147]/10 bg-gradient-to-br from-white via-white to-[#eaf8f0]"
-                  : "border-red-100 bg-gradient-to-br from-white via-white to-red-50"
-            }`}
+            className={`relative overflow-hidden rounded-[34px] border p-7 shadow-[0_30px_100px_rgba(18,58,38,0.10)] md:p-10 xl:p-12 ${overallPresentation.panelClass}`}
           >
             <div className="absolute right-0 top-0 h-full w-[38%] bg-[radial-gradient(circle_at_center,rgba(3,145,71,0.09),transparent_66%)]" />
             <div className="pml-hex-pattern absolute inset-0 opacity-[0.025]" />
@@ -408,13 +450,7 @@ export default function SystemStatusClient({
               <div>
                 <div className="flex items-center gap-3">
                   <span
-                    className={`h-3 w-3 rounded-full ${
-                      status === "loading"
-                        ? "animate-pulse bg-black/25"
-                        : operational
-                          ? "bg-[#039147] shadow-[0_0_0_8px_rgba(3,145,71,0.10)]"
-                          : "bg-red-500 shadow-[0_0_0_8px_rgba(239,68,68,0.10)]"
-                    }`}
+                    className={`h-3 w-3 rounded-full ${overallPresentation.indicatorClass}`}
                   />
 
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-black/38">
@@ -423,20 +459,7 @@ export default function SystemStatusClient({
                 </div>
 
                 <h2 className="mt-5 max-w-5xl text-3xl font-black leading-tight tracking-[-0.035em] text-black md:text-5xl xl:text-[58px]">
-                  {status === "loading"
-                    ? t(
-                        "Checking monitored services",
-                        "Memeriksa layanan yang dipantau",
-                      )
-                    : operational
-                      ? t(
-                          "All monitored services are operational",
-                          "Seluruh layanan yang dipantau beroperasi normal",
-                        )
-                      : t(
-                          "One or more services require attention",
-                          "Satu atau beberapa layanan memerlukan perhatian",
-                        )}
+                  {overallPresentation.title}
                 </h2>
 
                 {status === "error" ? (
@@ -465,15 +488,9 @@ export default function SystemStatusClient({
               </div>
 
               <div
-                className={`flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-[10px] text-2xl font-black md:h-36 md:w-36 md:text-3xl ${
-                  status === "loading"
-                    ? "border-black/[0.04] bg-white text-black/30"
-                    : operational
-                      ? "border-[#e2f5ea] bg-[#039147] text-white shadow-[0_28px_75px_rgba(3,145,71,0.30)]"
-                      : "border-red-100 bg-red-500 text-white shadow-[0_28px_75px_rgba(239,68,68,0.25)]"
-                }`}
+                className={`flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-[10px] text-2xl font-black md:h-36 md:w-36 md:text-3xl ${overallPresentation.badgeClass}`}
               >
-                {status === "loading" ? "..." : operational ? "OK" : "!"}
+                {overallPresentation.badgeLabel}
               </div>
             </div>
           </section>

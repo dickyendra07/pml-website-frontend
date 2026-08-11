@@ -33,6 +33,36 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function getAdminHealthPresentation(status: PageStatus, healthy: boolean) {
+  if (status === "loading") {
+    return {
+      panelClass: "border-black/5 bg-white",
+      title: "Checking system services",
+      badgeClass: "bg-black/5 text-black/35",
+      badgeLabel: "...",
+    };
+  }
+
+  if (healthy) {
+    return {
+      panelClass:
+        "border-[#039147]/10 bg-gradient-to-br from-[#eaf8f0] to-white",
+      title: "All monitored services are operational",
+      badgeClass:
+        "bg-[#039147] text-white shadow-[0_20px_60px_rgba(3,145,71,0.30)]",
+      badgeLabel: "OK",
+    };
+  }
+
+  return {
+    panelClass: "border-red-100 bg-gradient-to-br from-red-50 to-white",
+    title: "One or more services need attention",
+    badgeClass:
+      "bg-red-500 text-white shadow-[0_20px_60px_rgba(239,68,68,0.25)]",
+    badgeLabel: "!",
+  };
+}
+
 function ServiceCard({
   label,
   description,
@@ -130,6 +160,10 @@ export default function AdminHealthPage() {
   }, [loadHealth]);
 
   const overallHealthy = status === "success" && health?.status === "ok";
+  const overallPresentation = getAdminHealthPresentation(
+    status,
+    overallHealthy,
+  );
 
   return (
     <AdminShell>
@@ -158,13 +192,7 @@ export default function AdminHealthPage() {
       </div>
 
       <section
-        className={`mb-8 overflow-hidden rounded-[30px] border p-6 shadow-[0_22px_70px_rgba(0,0,0,0.08)] md:p-8 ${
-          overallHealthy
-            ? "border-[#039147]/10 bg-gradient-to-br from-[#eaf8f0] to-white"
-            : status === "error"
-              ? "border-red-100 bg-gradient-to-br from-red-50 to-white"
-              : "border-black/5 bg-white"
-        }`}
+        className={`mb-8 overflow-hidden rounded-[30px] border p-6 shadow-[0_22px_70px_rgba(0,0,0,0.08)] md:p-8 ${overallPresentation.panelClass}`}
       >
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
           <div>
@@ -172,11 +200,7 @@ export default function AdminHealthPage() {
               Overall Status
             </p>
             <h2 className="mt-3 text-3xl font-black text-black">
-              {status === "loading"
-                ? "Checking system services"
-                : overallHealthy
-                  ? "All monitored services are operational"
-                  : "One or more services need attention"}
+              {overallPresentation.title}
             </h2>
 
             {status === "error" ? (
@@ -193,15 +217,9 @@ export default function AdminHealthPage() {
           </div>
 
           <div
-            className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-full text-xl font-black ${
-              status === "loading"
-                ? "bg-black/5 text-black/35"
-                : overallHealthy
-                  ? "bg-[#039147] text-white shadow-[0_20px_60px_rgba(3,145,71,0.30)]"
-                  : "bg-red-500 text-white shadow-[0_20px_60px_rgba(239,68,68,0.25)]"
-            }`}
+            className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-full text-xl font-black ${overallPresentation.badgeClass}`}
           >
-            {status === "loading" ? "..." : overallHealthy ? "OK" : "!"}
+            {overallPresentation.badgeLabel}
           </div>
         </div>
       </section>

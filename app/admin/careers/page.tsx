@@ -82,6 +82,14 @@ function toIsoOrNull(value: string) {
   return date.toISOString();
 }
 
+function toFormText(value: string | null | undefined, fallback = "") {
+  return value || fallback;
+}
+
+function toNullableText(value: string) {
+  return value || null;
+}
+
 function mapCareerToForm(item: AdminCareerItem): CareerForm {
   const legacyFeaturedImage =
     item.featuredImage || item.featuredMedia?.url || "";
@@ -93,24 +101,48 @@ function mapCareerToForm(item: AdminCareerItem): CareerForm {
 
   return {
     id: item.id,
-    title: item.title || "",
-    slug: item.slug || "",
-    department: item.department || "",
-    location: item.location || "",
-    employmentType: item.employmentType || "Full-time",
-    experienceLevel: item.experienceLevel || "",
-    summary: item.summary || "",
-    description: item.description || "",
-    responsibilities: item.responsibilities || "",
-    requirements: item.requirements || "",
-    benefits: item.benefits || "",
-    applyEmail: item.applyEmail || "",
-    applyUrl: item.applyUrl || "",
+    title: toFormText(item.title),
+    slug: toFormText(item.slug),
+    department: toFormText(item.department),
+    location: toFormText(item.location),
+    employmentType: toFormText(item.employmentType, "Full-time"),
+    experienceLevel: toFormText(item.experienceLevel),
+    summary: toFormText(item.summary),
+    description: toFormText(item.description),
+    responsibilities: toFormText(item.responsibilities),
+    requirements: toFormText(item.requirements),
+    benefits: toFormText(item.benefits),
+    applyEmail: toFormText(item.applyEmail),
+    applyUrl: toFormText(item.applyUrl),
     featuredImage: featuredMedia?.url || legacyFeaturedImage,
     featuredMedia,
     status: item.status,
     sortOrder: String(item.sortOrder ?? 0),
     publishedAt: toDateTimeLocal(item.publishedAt),
+  };
+}
+
+function createCareerPayload(form: CareerForm) {
+  return {
+    title: form.title,
+    slug: form.slug || undefined,
+    department: toNullableText(form.department),
+    location: toNullableText(form.location),
+    employmentType: toNullableText(form.employmentType),
+    experienceLevel: toNullableText(form.experienceLevel),
+    summary: toNullableText(form.summary),
+    description: toNullableText(form.description),
+    responsibilities: toNullableText(form.responsibilities),
+    requirements: toNullableText(form.requirements),
+    benefits: toNullableText(form.benefits),
+    applyEmail: toNullableText(form.applyEmail),
+    applyUrl: toNullableText(form.applyUrl),
+    featuredImage: form.featuredMedia?.url || toNullableText(form.featuredImage),
+    featuredReference: form.featuredMedia,
+    featuredMediaId: form.featuredMedia?.mediaId || null,
+    status: form.status,
+    sortOrder: Number(form.sortOrder) || 0,
+    publishedAt: toIsoOrNull(form.publishedAt),
   };
 }
 
@@ -208,27 +240,7 @@ export default function AdminCareersPage() {
       return;
     }
 
-    const payload = {
-      title: form.title,
-      slug: form.slug || undefined,
-      department: form.department || null,
-      location: form.location || null,
-      employmentType: form.employmentType || null,
-      experienceLevel: form.experienceLevel || null,
-      summary: form.summary || null,
-      description: form.description || null,
-      responsibilities: form.responsibilities || null,
-      requirements: form.requirements || null,
-      benefits: form.benefits || null,
-      applyEmail: form.applyEmail || null,
-      applyUrl: form.applyUrl || null,
-      featuredImage: form.featuredMedia?.url || form.featuredImage || null,
-      featuredReference: form.featuredMedia,
-      featuredMediaId: form.featuredMedia?.mediaId || null,
-      status: form.status,
-      sortOrder: Number(form.sortOrder) || 0,
-      publishedAt: toIsoOrNull(form.publishedAt),
-    };
+    const payload = createCareerPayload(form);
 
     setSaving(true);
     setMessage("");

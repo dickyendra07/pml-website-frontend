@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import MediaPicker from "@/components/admin/MediaPicker";
 import { resolveMediaUrl } from "@/lib/media";
@@ -120,10 +121,13 @@ export default function FacilityGalleryManager({
             >
               <div className="relative aspect-[4/3] overflow-hidden bg-[#f3f7f4]">
                 {item.image ? (
-                  <img
+                  <Image
                     src={resolveMediaUrl(item.image)}
                     alt=""
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                    className="object-cover transition duration-300 group-hover:scale-105"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-sm font-bold text-black/30">

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ReactNode, useRef, useState } from "react";
+import { ReactNode, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -40,6 +40,14 @@ type IconType =
   | "faq"
   | "building"
   | "shield";
+
+function getLocalizedText(
+  locale: Locale,
+  english: string,
+  indonesian: string,
+) {
+  return locale === "id" ? indonesian : english;
+}
 
 const aboutItems: MegaItem[] = [
   {
@@ -238,7 +246,7 @@ function getLocalizedMegaItems(
   });
 }
 
-function Icon({ type }: { type: IconType }) {
+function getPrimaryIcon(type: IconType) {
   if (type === "team") {
     return (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -356,6 +364,14 @@ function Icon({ type }: { type: IconType }) {
       </svg>
     );
   }
+
+  return null;
+}
+
+function Icon({ type }: { type: IconType }) {
+  const primaryIcon = getPrimaryIcon(type);
+
+  if (primaryIcon) return primaryIcon;
 
   if (type === "analysis" || type === "lab") {
     return (
@@ -706,41 +722,12 @@ function NavMega({
   panel: ReactNode;
   className: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const openMenu = () => {
-    if (closeTimer.current) {
-      clearTimeout(closeTimer.current);
-      closeTimer.current = null;
-    }
-
-    setOpen(true);
-  };
-
-  const closeMenu = () => {
-    if (closeTimer.current) {
-      clearTimeout(closeTimer.current);
-    }
-
-    closeTimer.current = setTimeout(() => {
-      setOpen(false);
-      closeTimer.current = null;
-    }, 280);
-  };
-
   return (
-    <div
-      className={`group/menu relative ${open ? "is-open" : ""}`}
-      onMouseEnter={openMenu}
-      onMouseLeave={closeMenu}
-      onFocus={openMenu}
-      onBlur={closeMenu}
-    >
+    <div className="group/menu relative">
       <Link href={href} className={className}>
         {children}
         <svg
-          className={`h-3.5 w-3.5 transition ${open ? "rotate-180" : ""}`}
+          className="h-3.5 w-3.5 transition group-hover/menu:rotate-180 group-focus-within/menu:rotate-180"
           viewBox="0 0 20 20"
           fill="none"
         >
@@ -755,13 +742,7 @@ function NavMega({
       </Link>
 
       <div
-        className={`fixed left-1/2 top-[88px] z-[80] -translate-x-1/2 pt-3 transition duration-150 ${
-          open
-            ? "pointer-events-auto translate-y-0 opacity-100"
-            : "pointer-events-none translate-y-2 opacity-0"
-        }`}
-        onMouseEnter={openMenu}
-        onMouseLeave={closeMenu}
+        className="pointer-events-none fixed left-1/2 top-[88px] z-[80] -translate-x-1/2 translate-y-2 pt-3 opacity-0 transition duration-150 group-hover/menu:pointer-events-auto group-hover/menu:translate-y-0 group-hover/menu:opacity-100 group-focus-within/menu:pointer-events-auto group-focus-within/menu:translate-y-0 group-focus-within/menu:opacity-100"
       >
         <div
           className="absolute -top-4 left-0 right-0 h-5"
@@ -875,7 +856,8 @@ function MobileAccordion({
 
 export default function Header({ locale, onOpenProposal }: HeaderProps) {
   const pathname = usePathname();
-  const isIndonesian = locale === "id";
+  const text = (english: string, indonesian: string) =>
+    getLocalizedText(locale, english, indonesian);
 
   const localizedHref = (href: string) => localizeHref(href, locale);
 
@@ -955,7 +937,7 @@ export default function Header({ locale, onOpenProposal }: HeaderProps) {
 
         <nav className="hidden items-center gap-1 text-sm font-bold text-black/70 xl:flex">
           <Link className={navClass("/")} href={localizedHref("/")}>
-            {isIndonesian ? "Beranda" : "Home"}
+            {text("Home", "Beranda")}
           </Link>
 
           <NavMega
@@ -964,26 +946,24 @@ export default function Header({ locale, onOpenProposal }: HeaderProps) {
             panel={
               <MegaPanel
                 locale={locale}
-                label={isIndonesian ? "Tentang PML" : "About PML"}
+                label={text("About PML", "Tentang PML")}
                 width="980"
                 items={localizedAboutItems}
-                sideTitle={
-                  isIndonesian
-                    ? "Dukungan CRO independen dengan integritas ilmiah"
-                    : "Independent CRO support with scientific integrity"
-                }
-                sideDesc={
-                  isIndonesian
-                    ? "PML memadukan kualitas, kepatuhan, keahlian multidisiplin, dan dukungan proyek responsif untuk pelaksanaan studi yang andal."
-                    : "PML combines quality, compliance, multidisciplinary expertise, and responsive project support for reliable study delivery."
-                }
+                sideTitle={text(
+                  "Independent CRO support with scientific integrity",
+                  "Dukungan CRO independen dengan integritas ilmiah",
+                )}
+                sideDesc={text(
+                  "PML combines quality, compliance, multidisciplinary expertise, and responsive project support for reliable study delivery.",
+                  "PML memadukan kualitas, kepatuhan, keahlian multidisiplin, dan dukungan proyek responsif untuk pelaksanaan studi yang andal.",
+                )}
                 sideHref="/about-us"
-                sideCta={isIndonesian ? "Pelajari PML" : "Learn about PML"}
+                sideCta={text("Learn about PML", "Pelajari PML")}
                 sideIcon="building"
               />
             }
           >
-            {isIndonesian ? "Tentang Kami" : "About Us"}
+            {text("About Us", "Tentang Kami")}
           </NavMega>
 
           <NavMega
@@ -996,7 +976,7 @@ export default function Header({ locale, onOpenProposal }: HeaderProps) {
               />
             }
           >
-            {isIndonesian ? "Layanan" : "Services"}
+            {text("Services", "Layanan")}
           </NavMega>
 
           <NavMega
@@ -1005,39 +985,34 @@ export default function Header({ locale, onOpenProposal }: HeaderProps) {
             panel={
               <MegaPanel
                 locale={locale}
-                label={
-                  isIndonesian
-                    ? "Fasilitas & Kapabilitas"
-                    : "Facilities & Capability"
-                }
+                label={text(
+                  "Facilities & Capability",
+                  "Fasilitas & Kapabilitas",
+                )}
                 width="980"
                 items={localizedFacilityItems}
-                sideTitle={
-                  isIndonesian
-                    ? "Fasilitas untuk pelaksanaan studi yang andal"
-                    : "Facilities for reliable study execution"
-                }
-                sideDesc={
-                  isIndonesian
-                    ? "PML mendukung kebutuhan klinis, analitik, dan operasional melalui fasilitas serta alur dokumentasi yang terintegrasi."
-                    : "PML supports clinical, analytical, and operational needs through integrated facilities and documentation workflows."
-                }
+                sideTitle={text(
+                  "Facilities for reliable study execution",
+                  "Fasilitas untuk pelaksanaan studi yang andal",
+                )}
+                sideDesc={text(
+                  "PML supports clinical, analytical, and operational needs through integrated facilities and documentation workflows.",
+                  "PML mendukung kebutuhan klinis, analitik, dan operasional melalui fasilitas serta alur dokumentasi yang terintegrasi.",
+                )}
                 sideHref="/facilities"
-                sideCta={
-                  isIndonesian ? "Jelajahi fasilitas" : "Explore facilities"
-                }
+                sideCta={text("Explore facilities", "Jelajahi fasilitas")}
                 sideIcon="building"
               />
             }
           >
-            {isIndonesian ? "Fasilitas" : "Facilities"}
+            {text("Facilities", "Fasilitas")}
           </NavMega>
 
           <Link
             className={navClass("/contact")}
             href={localizeHref("/contact", locale)}
           >
-            {isIndonesian ? "Kontak" : "Contact"}
+            {text("Contact", "Kontak")}
           </Link>
 
           <NavMega
@@ -1046,33 +1021,31 @@ export default function Header({ locale, onOpenProposal }: HeaderProps) {
             panel={
               <MegaPanel
                 locale={locale}
-                label={isIndonesian ? "Wawasan Terbaru" : "Latest Insight"}
+                label={text("Latest Insight", "Wawasan Terbaru")}
                 width="980"
                 items={localizedInsightItems}
-                sideTitle={
-                  isIndonesian
-                    ? "Sumber edukasi untuk kesiapan proyek yang lebih baik"
-                    : "Educational resources for better project readiness"
-                }
-                sideDesc={
-                  isIndonesian
-                    ? "Jelajahi artikel, berita, publikasi, dan FAQ untuk memahami layanan PML dengan lebih baik."
-                    : "Explore articles, news, publications, and FAQ content to better understand PML services."
-                }
+                sideTitle={text(
+                  "Educational resources for better project readiness",
+                  "Sumber edukasi untuk kesiapan proyek yang lebih baik",
+                )}
+                sideDesc={text(
+                  "Explore articles, news, publications, and FAQ content to better understand PML services.",
+                  "Jelajahi artikel, berita, publikasi, dan FAQ untuk memahami layanan PML dengan lebih baik.",
+                )}
                 sideHref="/insight"
-                sideCta={isIndonesian ? "Lihat wawasan" : "View insight"}
+                sideCta={text("View insight", "Lihat wawasan")}
                 sideIcon="catalogue"
               />
             }
           >
-            {isIndonesian ? "Wawasan" : "Insight"}
+            {text("Insight", "Wawasan")}
           </NavMega>
 
           <Link
             className={navClass("/careers")}
             href={localizedHref("/careers")}
           >
-            {isIndonesian ? "Karier" : "Careers"}
+            {text("Careers", "Karier")}
           </Link>
         </nav>
 
@@ -1084,7 +1057,7 @@ export default function Header({ locale, onOpenProposal }: HeaderProps) {
             onClick={onOpenProposal}
             className="inline-flex h-12 items-center justify-center rounded-full border border-[#039147] px-7 text-sm font-black text-[#039147] transition hover:bg-[#039147] hover:text-white"
           >
-            {isIndonesian ? "Ajukan Proposal" : "Request Proposal"}
+            {text("Request Proposal", "Ajukan Proposal")}
           </button>
         </div>
 
@@ -1145,7 +1118,7 @@ export default function Header({ locale, onOpenProposal }: HeaderProps) {
                 className={mobileLinkClass("/")}
                 href={localizedHref("/")}
               >
-                {isIndonesian ? "Beranda" : "Home"}
+                {text("Home", "Beranda")}
               </Link>
 
               <MobileAccordion
@@ -1177,7 +1150,7 @@ export default function Header({ locale, onOpenProposal }: HeaderProps) {
                 className={mobileLinkClass("/contact")}
                 href={localizedHref("/contact")}
               >
-                {isIndonesian ? "Kontak" : "Contact"}
+                {text("Contact", "Kontak")}
               </Link>
 
               <MobileAccordion
@@ -1197,7 +1170,7 @@ export default function Header({ locale, onOpenProposal }: HeaderProps) {
               }}
               className="sticky bottom-4 mt-8 inline-flex w-full items-center justify-center rounded-full bg-[#039147] px-6 py-4 text-sm font-extrabold text-white shadow-[0_18px_40px_rgba(3,145,71,0.28)] transition active:scale-[0.99]"
             >
-              {isIndonesian ? "Ajukan Proposal" : "Request a Proposal"}
+              {text("Request a Proposal", "Ajukan Proposal")}
             </button>
           </aside>
         </div>

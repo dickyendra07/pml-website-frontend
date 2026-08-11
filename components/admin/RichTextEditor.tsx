@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "@tiptap/extension-link";
+import type { Editor } from "@tiptap/core";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -121,6 +122,14 @@ function ToolbarGroup({ children }: { children: React.ReactNode }) {
   );
 }
 
+function getCurrentFormat(editor: Editor) {
+  if (editor.isActive("heading", { level: 1 })) return "h1";
+  if (editor.isActive("heading", { level: 2 })) return "h2";
+  if (editor.isActive("heading", { level: 3 })) return "h3";
+
+  return "paragraph";
+}
+
 export default function RichTextEditor({
   value,
   onChange,
@@ -214,13 +223,7 @@ export default function RichTextEditor({
     );
   }
 
-  const currentFormat = editor.isActive("heading", { level: 1 })
-    ? "h1"
-    : editor.isActive("heading", { level: 2 })
-      ? "h2"
-      : editor.isActive("heading", { level: 3 })
-        ? "h3"
-        : "paragraph";
+  const currentFormat = getCurrentFormat(editor);
 
   const setFormat = (format: string) => {
     if (format === "paragraph") {

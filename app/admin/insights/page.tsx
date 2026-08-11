@@ -2,7 +2,14 @@
 
 import MediaPicker from "@/components/admin/MediaPicker";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  FormEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
 import RichTextEditor from "@/components/admin/RichTextEditor";
@@ -98,32 +105,67 @@ function toIsoOrNull(value: string) {
   return date.toISOString();
 }
 
+function toFormText(value: string | null | undefined, fallback = "") {
+  return value || fallback;
+}
+
+function toNullableText(value: string) {
+  return value || null;
+}
+
 function mapInsightToForm(item: AdminInsightItem): InsightForm {
   return {
     id: item.id,
 
-    titleEn: item.titleEn || "",
-    slugEn: item.slugEn || "",
-    excerptEn: item.excerptEn || "",
-    contentEn: item.contentEn || "",
-    tagsEn: item.tagsEn?.join(", ") || "",
-    seoTitleEn: item.seoTitleEn || "",
-    metaDescriptionEn: item.metaDescriptionEn || "",
+    titleEn: toFormText(item.titleEn),
+    slugEn: toFormText(item.slugEn),
+    excerptEn: toFormText(item.excerptEn),
+    contentEn: toFormText(item.contentEn),
+    tagsEn: toFormText(item.tagsEn?.join(", ")),
+    seoTitleEn: toFormText(item.seoTitleEn),
+    metaDescriptionEn: toFormText(item.metaDescriptionEn),
 
-    titleId: item.titleId || "",
-    slugId: item.slugId || "",
-    excerptId: item.excerptId || "",
-    contentId: item.contentId || "",
-    tagsId: item.tagsId?.join(", ") || "",
-    seoTitleId: item.seoTitleId || "",
-    metaDescriptionId: item.metaDescriptionId || "",
+    titleId: toFormText(item.titleId),
+    slugId: toFormText(item.slugId),
+    excerptId: toFormText(item.excerptId),
+    contentId: toFormText(item.contentId),
+    tagsId: toFormText(item.tagsId?.join(", ")),
+    seoTitleId: toFormText(item.seoTitleId),
+    metaDescriptionId: toFormText(item.metaDescriptionId),
 
-    category: item.category || "articles",
-    coverImage: item.coverImage || "",
+    category: toFormText(item.category, "articles"),
+    coverImage: toFormText(item.coverImage),
     coverMedia: item.coverReference || createMediaReference(item.coverImage),
     status: item.status,
     isFeatured: item.isFeatured,
     publishedAt: toDateTimeLocal(item.publishedAt),
+  };
+}
+
+function createInsightPayload(form: InsightForm) {
+  return {
+    titleEn: toNullableText(form.titleEn),
+    slugEn: toNullableText(form.slugEn),
+    excerptEn: toNullableText(form.excerptEn),
+    contentEn: toNullableText(form.contentEn),
+    tagsEn: parseTags(form.tagsEn),
+    seoTitleEn: toNullableText(form.seoTitleEn),
+    metaDescriptionEn: toNullableText(form.metaDescriptionEn),
+
+    titleId: toNullableText(form.titleId),
+    slugId: toNullableText(form.slugId),
+    excerptId: toNullableText(form.excerptId),
+    contentId: toNullableText(form.contentId),
+    tagsId: parseTags(form.tagsId),
+    seoTitleId: toNullableText(form.seoTitleId),
+    metaDescriptionId: toNullableText(form.metaDescriptionId),
+
+    category: form.category,
+    coverImage: form.coverMedia?.url || toNullableText(form.coverImage),
+    coverReference: form.coverMedia,
+    status: form.status,
+    isFeatured: form.isFeatured,
+    publishedAt: toIsoOrNull(form.publishedAt),
   };
 }
 
@@ -143,6 +185,76 @@ function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function getInsightCardClass(selected: boolean) {
+  return selected
+    ? "border-[#039147] bg-[#eaf8f0]"
+    : "border-black/5 bg-white5 hover:border-white/20 hover:bg-white";
+}
+
+function getPublishStatusClass(status: PageSeoStatus) {
+  return status === "PUBLISHED"
+    ? "bg-[#039147]/20 text-[#039147]"
+    : "bg-white/10 text-black/45";
+}
+
+function getAvailabilityDotClass(value: string) {
+  return value ? "bg-[#039147]" : "bg-black/15";
+}
+
+function getAvailabilityLabel(value: string) {
+  return value ? "available" : "not completed";
+}
+
+function getDefaultLanguage(englishTitle: string | null) {
+  return englishTitle ? "en" : "id";
+}
+
+function getFeatureLabel(featured: boolean) {
+  return featured ? "Featured" : "Standard";
+}
+
+function getEditorLabel(selected: boolean) {
+  return selected ? "Edit Insight" : "Create Insight";
+}
+
+function getNextSlug(currentSlug: string, manuallyEdited: boolean, title: string) {
+  return manuallyEdited ? currentSlug : slugify(title);
+}
+
+function getSaveLabel(saving: boolean) {
+  return saving ? "Saving Insight..." : "Save Insight";
+}
+
+function getTagCount(item: AdminInsightItem) {
+  return (item.tagsEn?.length || 0) + (item.tagsId?.length || 0);
+}
+
+function Show({ when, children }: { when: boolean; children: ReactNode }) {
+  return when ? children : null;
+}
+
+function getLanguageTabClass(active: boolean) {
+  return active
+    ? "bg-[#039147] text-white shadow-[0_12px_30px_rgba(3,145,71,0.22)]"
+    : "text-black/45 hover:text-[#039147]";
+}
+
+function getLimitClass(length: number, limit: number) {
+  return length > limit ? "text-red-600" : "text-black/35";
+}
+
+function getPublicInsightHref(form: InsightForm) {
+  if (form.slugId) {
+    return `/id/insight/${form.category}/${form.slugId}`;
+  }
+
+  return `/en/insight/${form.category}/${form.slugEn}`;
 }
 
 export default function AdminInsightsPage() {
@@ -185,9 +297,7 @@ export default function AdminInsightsPage() {
       });
     } catch (error) {
       setStatus("error");
-      setMessage(
-        error instanceof Error ? error.message : "Failed to load insights.",
-      );
+      setMessage(getErrorMessage(error, "Failed to load insights."));
     }
   }, []);
 
@@ -222,7 +332,7 @@ export default function AdminInsightsPage() {
     setForm(mapInsightToForm(item));
     setSlugEnManuallyEdited(true);
     setSlugIdManuallyEdited(true);
-    setActiveLanguage(item.titleEn ? "en" : "id");
+    setActiveLanguage(getDefaultLanguage(item.titleEn));
     setMessage("");
   };
 
@@ -248,9 +358,7 @@ export default function AdminInsightsPage() {
       await loadInsights();
       setMessage("Insight archived successfully.");
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Failed to archive insight.",
-      );
+      setMessage(getErrorMessage(error, "Failed to archive insight."));
     } finally {
       setSaving(false);
     }
@@ -277,30 +385,7 @@ export default function AdminInsightsPage() {
       return;
     }
 
-    const payload = {
-      titleEn: form.titleEn || null,
-      slugEn: form.slugEn || null,
-      excerptEn: form.excerptEn || null,
-      contentEn: form.contentEn || null,
-      tagsEn: parseTags(form.tagsEn),
-      seoTitleEn: form.seoTitleEn || null,
-      metaDescriptionEn: form.metaDescriptionEn || null,
-
-      titleId: form.titleId || null,
-      slugId: form.slugId || null,
-      excerptId: form.excerptId || null,
-      contentId: form.contentId || null,
-      tagsId: parseTags(form.tagsId),
-      seoTitleId: form.seoTitleId || null,
-      metaDescriptionId: form.metaDescriptionId || null,
-
-      category: form.category,
-      coverImage: form.coverMedia?.url || form.coverImage || null,
-      coverReference: form.coverMedia,
-      status: form.status,
-      isFeatured: form.isFeatured,
-      publishedAt: toIsoOrNull(form.publishedAt),
-    };
+    const payload = createInsightPayload(form);
 
     try {
       if (form.id) {
@@ -319,9 +404,7 @@ export default function AdminInsightsPage() {
 
       await loadInsights();
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Failed to save insight.",
-      );
+      setMessage(getErrorMessage(error, "Failed to save insight."));
     } finally {
       setSaving(false);
     }
@@ -356,24 +439,24 @@ export default function AdminInsightsPage() {
         </button>
       </div>
 
-      {status === "loading" ? (
+      <Show when={status === "loading"}>
         <AdminState
           title="Loading insights"
           description="Please wait while the CMS loads insight data."
         />
-      ) : null}
+      </Show>
 
-      {status === "error" ? (
+      <Show when={status === "error"}>
         <AdminState
           title="Unable to load insights"
           description={message}
           tone="error"
         />
-      ) : null}
+      </Show>
 
-      {status === "success" ? (
+      <Show when={status === "success"}>
         <div className="grid gap-6">
-          {!isWritingMode ? (
+          <Show when={!isWritingMode}>
             <section className="rounded-[30px] border border-black/5 bg-white p-4 shadow-[0_22px_70px_rgba(0,0,0,0.08)] backdrop-blur md:p-5">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
@@ -399,11 +482,7 @@ export default function AdminInsightsPage() {
                       selectInsight(item);
                       setIsWritingMode(true);
                     }}
-                    className={`rounded-2xl border p-4 text-left transition ${
-                      item.id === form.id
-                        ? "border-[#039147] bg-[#eaf8f0]"
-                        : "border-black/5 bg-white5 hover:border-white/20 hover:bg-white"
-                    }`}
+                    className={`rounded-2xl border p-4 text-left transition ${getInsightCardClass(item.id === form.id)}`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -416,11 +495,7 @@ export default function AdminInsightsPage() {
                       </div>
 
                       <span
-                        className={`rounded-full px-3 py-1 text-[10px] font-black ${
-                          item.status === "PUBLISHED"
-                            ? "bg-[#039147]/20 text-[#039147]"
-                            : "bg-white/10 text-black/45"
-                        }`}
+                        className={`rounded-full px-3 py-1 text-[10px] font-black ${getPublishStatusClass(item.status)}`}
                       >
                         {item.status}
                       </span>
@@ -429,27 +504,25 @@ export default function AdminInsightsPage() {
                     <div className="mt-3 flex flex-wrap gap-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-black/50">
                       <span>{item.category}</span>
                       <span>•</span>
-                      <span>{item.isFeatured ? "Featured" : "Standard"}</span>
+                      <span>{getFeatureLabel(item.isFeatured)}</span>
                       <span>•</span>
                       <span>
-                        {(item.tagsEn?.length || 0) +
-                          (item.tagsId?.length || 0)}{" "}
-                        tags
+                        {getTagCount(item)} tags
                       </span>
                     </div>
                   </button>
                 ))}
 
-                {items.length === 0 ? (
+                <Show when={items.length === 0}>
                   <div className="rounded-2xl border border-black/5 bg-white5 p-5 text-sm font-bold text-black/45">
                     No insight yet. Create the first article or FAQ.
                   </div>
-                ) : null}
+                </Show>
               </div>
             </section>
-          ) : null}
+          </Show>
 
-          {isWritingMode ? (
+          <Show when={isWritingMode}>
             <form
               onSubmit={handleSubmit}
               className="min-w-0 rounded-[34px] border border-black/5 bg-white p-5 shadow-[0_22px_70px_rgba(0,0,0,0.08)] backdrop-blur md:p-8 xl:p-10"
@@ -457,7 +530,7 @@ export default function AdminInsightsPage() {
               <div className="mb-6 flex flex-col justify-between gap-2 md:flex-row md:items-end">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.16em] text-[#039147]">
-                    {selectedInsight ? "Edit Insight" : "Create Insight"}
+                    {getEditorLabel(Boolean(selectedInsight))}
                   </p>
                   <h2 className="mt-2 text-2xl font-black text-black">
                     Insight Content
@@ -507,24 +580,20 @@ export default function AdminInsightsPage() {
                       </span>
                       <div className="flex h-13 items-center gap-3 rounded-2xl border border-black/5 bg-white px-4">
                         <span
-                          className={`h-2.5 w-2.5 rounded-full ${
-                            form.titleEn ? "bg-[#039147]" : "bg-black/15"
-                          }`}
+                          className={`h-2.5 w-2.5 rounded-full ${getAvailabilityDotClass(form.titleEn)}`}
                         />
                         <span className="text-xs font-black text-black/55">
-                          English {form.titleEn ? "available" : "not completed"}
+                          English {getAvailabilityLabel(form.titleEn)}
                         </span>
 
                         <span className="mx-1 h-4 w-px bg-black/10" />
 
                         <span
-                          className={`h-2.5 w-2.5 rounded-full ${
-                            form.titleId ? "bg-[#039147]" : "bg-black/15"
-                          }`}
+                          className={`h-2.5 w-2.5 rounded-full ${getAvailabilityDotClass(form.titleId)}`}
                         />
                         <span className="text-xs font-black text-black/55">
                           Indonesia{" "}
-                          {form.titleId ? "available" : "not completed"}
+                          {getAvailabilityLabel(form.titleId)}
                         </span>
                       </div>
                     </div>
@@ -536,11 +605,7 @@ export default function AdminInsightsPage() {
                     <button
                       type="button"
                       onClick={() => setActiveLanguage("en")}
-                      className={`rounded-full px-6 py-3 text-xs font-black uppercase tracking-[0.12em] transition ${
-                        activeLanguage === "en"
-                          ? "bg-[#039147] text-white shadow-[0_12px_30px_rgba(3,145,71,0.22)]"
-                          : "text-black/45 hover:text-[#039147]"
-                      }`}
+                      className={`rounded-full px-6 py-3 text-xs font-black uppercase tracking-[0.12em] transition ${getLanguageTabClass(activeLanguage === "en")}`}
                     >
                       English Content
                     </button>
@@ -548,11 +613,7 @@ export default function AdminInsightsPage() {
                     <button
                       type="button"
                       onClick={() => setActiveLanguage("id")}
-                      className={`rounded-full px-6 py-3 text-xs font-black uppercase tracking-[0.12em] transition ${
-                        activeLanguage === "id"
-                          ? "bg-[#039147] text-white shadow-[0_12px_30px_rgba(3,145,71,0.22)]"
-                          : "text-black/45 hover:text-[#039147]"
-                      }`}
+                      className={`rounded-full px-6 py-3 text-xs font-black uppercase tracking-[0.12em] transition ${getLanguageTabClass(activeLanguage === "id")}`}
                     >
                       Konten Indonesia
                     </button>
@@ -573,9 +634,11 @@ export default function AdminInsightsPage() {
                           setForm((current) => ({
                             ...current,
                             titleEn: value,
-                            slugEn: slugEnManuallyEdited
-                              ? current.slugEn
-                              : slugify(value),
+                            slugEn: getNextSlug(
+                              current.slugEn,
+                              slugEnManuallyEdited,
+                              value,
+                            ),
                           }));
                         }}
                         className="h-14 rounded-2xl border border-black/5 bg-white px-5 text-base font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
@@ -664,11 +727,7 @@ export default function AdminInsightsPage() {
                         <span className="flex items-center justify-between gap-3 text-sm font-black text-black">
                           SEO Title
                           <span
-                            className={
-                              form.seoTitleEn.length > 60
-                                ? "text-red-600"
-                                : "text-black/35"
-                            }
+                            className={getLimitClass(form.seoTitleEn.length, 60)}
                           >
                             {form.seoTitleEn.length} / 60
                           </span>
@@ -687,11 +746,10 @@ export default function AdminInsightsPage() {
                         <span className="flex items-center justify-between gap-3 text-sm font-black text-black">
                           Meta Description
                           <span
-                            className={
-                              form.metaDescriptionEn.length > 160
-                                ? "text-red-600"
-                                : "text-black/35"
-                            }
+                            className={getLimitClass(
+                              form.metaDescriptionEn.length,
+                              160,
+                            )}
                           >
                             {form.metaDescriptionEn.length} / 160
                           </span>
@@ -742,9 +800,11 @@ export default function AdminInsightsPage() {
                           setForm((current) => ({
                             ...current,
                             titleId: value,
-                            slugId: slugIdManuallyEdited
-                              ? current.slugId
-                              : slugify(value),
+                            slugId: getNextSlug(
+                              current.slugId,
+                              slugIdManuallyEdited,
+                              value,
+                            ),
                           }));
                         }}
                         className="h-14 rounded-2xl border border-black/5 bg-white px-5 text-base font-bold text-black outline-none transition focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
@@ -833,11 +893,7 @@ export default function AdminInsightsPage() {
                         <span className="flex items-center justify-between gap-3 text-sm font-black text-black">
                           SEO Title Indonesia
                           <span
-                            className={
-                              form.seoTitleId.length > 60
-                                ? "text-red-600"
-                                : "text-black/35"
-                            }
+                            className={getLimitClass(form.seoTitleId.length, 60)}
                           >
                             {form.seoTitleId.length} / 60
                           </span>
@@ -856,11 +912,10 @@ export default function AdminInsightsPage() {
                         <span className="flex items-center justify-between gap-3 text-sm font-black text-black">
                           Meta Description Indonesia
                           <span
-                            className={
-                              form.metaDescriptionId.length > 160
-                                ? "text-red-600"
-                                : "text-black/35"
-                            }
+                            className={getLimitClass(
+                              form.metaDescriptionId.length,
+                              160,
+                            )}
                           >
                             {form.metaDescriptionId.length} / 160
                           </span>
@@ -963,14 +1018,14 @@ export default function AdminInsightsPage() {
                 </label>
               </div>
 
-              {message ? (
+              <Show when={Boolean(message)}>
                 <div className="mt-6 rounded-2xl border border-black/5 bg-white5 p-4 text-sm font-bold text-black/70">
                   {message}
                 </div>
-              ) : null}
+              </Show>
 
               <div className="mt-8 flex flex-col gap-3 rounded-[24px] border border-black/5 bg-white5 p-3 sm:flex-row sm:justify-end">
-                {form.id ? (
+                <Show when={Boolean(form.id)}>
                   <button
                     type="button"
                     onClick={handleArchive}
@@ -979,35 +1034,31 @@ export default function AdminInsightsPage() {
                   >
                     Archive
                   </button>
-                ) : null}
+                </Show>
 
-                {form.slugId || form.slugEn ? (
+                <Show when={Boolean(form.slugId || form.slugEn)}>
                   <a
-                    href={
-                      form.slugId
-                        ? `/id/insight/${form.category}/${form.slugId}`
-                        : `/en/insight/${form.category}/${form.slugEn}`
-                    }
+                    href={getPublicInsightHref(form)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="rounded-full border border-[#039147]/20 bg-white px-8 py-4 text-sm font-black text-[#039147] transition hover:-translate-y-0.5 hover:bg-[#eaf8f0]"
                   >
                     View Public Page ↗
                   </a>
-                ) : null}
+                </Show>
 
                 <button
                   type="submit"
                   disabled={saving}
                   className="rounded-full bg-[#039147] px-8 py-4 text-sm font-black text-black shadow-[0_18px_50px_rgba(3,145,71,0.24)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {saving ? "Saving Insight..." : "Save Insight"}
+                  {getSaveLabel(saving)}
                 </button>
               </div>
             </form>
-          ) : null}
+          </Show>
         </div>
-      ) : null}
+      </Show>
     </AdminShell>
   );
 }

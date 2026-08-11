@@ -36,9 +36,7 @@ export default function Testimonials() {
               className="flex h-full min-w-[86%] snap-start flex-col rounded-[28px] border border-black/5 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl sm:min-w-[48%] md:min-w-0 md:rounded-[32px] md:p-8"
             >
               <div className="mb-5 flex text-[#039147] md:mb-6">
-                {"★★★★★".split("").map((star, index) => (
-                  <span key={index}>{star}</span>
-                ))}
+                <span aria-hidden="true">★★★★★</span>
               </div>
 
               <p className="flex-1 text-base leading-8 text-black/65 md:text-lg md:leading-9">
