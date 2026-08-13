@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "@tiptap/extension-link";
+import TextAlign from "@tiptap/extension-text-align";
 import type { Editor } from "@tiptap/core";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
@@ -163,6 +164,10 @@ export default function RichTextEditor({
         allowBase64: false,
       }),
       Underline,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+        alignments: ["left", "center", "right", "justify"],
+      }),
       Placeholder.configure({
         placeholder:
           "Start writing your SEO article here. Use headings, paragraph, internal links, lists, and quotes...",
@@ -375,6 +380,28 @@ export default function RichTextEditor({
                 <option value="h2">Heading 2</option>
                 <option value="h3">Heading 3</option>
               </select>
+            </ToolbarGroup>
+
+            <ToolbarGroup>
+              {(
+                [
+                  ["left", "Left"],
+                  ["center", "Center"],
+                  ["right", "Right"],
+                  ["justify", "Justify"],
+                ] as const
+              ).map(([alignment, label]) => (
+                <ToolbarButton
+                  key={alignment}
+                  active={editor.isActive({ textAlign: alignment })}
+                  onClick={() =>
+                    editor.chain().focus().setTextAlign(alignment).run()
+                  }
+                  title={`Align ${alignment}`}
+                >
+                  {label}
+                </ToolbarButton>
+              ))}
             </ToolbarGroup>
 
             <ToolbarGroup>

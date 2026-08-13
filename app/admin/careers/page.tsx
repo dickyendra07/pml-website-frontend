@@ -206,6 +206,11 @@ export default function AdminCareersPage() {
     setIsEditing(true);
   };
 
+  const returnToCareerList = () => {
+    setIsEditing(false);
+    setMessage("");
+  };
+
   const handleArchive = async () => {
     if (!form.id) return;
 
@@ -279,13 +284,24 @@ export default function AdminCareersPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={resetForm}
-          className="w-fit rounded-full bg-[#039147] px-6 py-3 text-sm font-black text-white shadow-[0_18px_50px_rgba(3,145,71,0.22)] transition hover:-translate-y-0.5"
-        >
-          Create New Career
-        </button>
+        {isEditing ? (
+          <button
+            type="button"
+            onClick={returnToCareerList}
+            className="inline-flex w-fit items-center gap-2 rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-black text-black/60 shadow-sm transition hover:border-[#039147]/30 hover:bg-[#eaf8f0] hover:text-[#039147]"
+          >
+            <span aria-hidden="true">←</span>
+            Back to Career List
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={resetForm}
+            className="w-fit rounded-full bg-[#039147] px-6 py-3 text-sm font-black text-white shadow-[0_18px_50px_rgba(3,145,71,0.22)] transition hover:-translate-y-0.5"
+          >
+            Create New Career
+          </button>
+        )}
       </div>
 
       {status === "loading" ? (
@@ -374,13 +390,9 @@ export default function AdminCareersPage() {
               </h2>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setIsEditing(false)}
-              className="w-fit rounded-full border border-black/5 bg-white5 px-4 py-2 text-xs font-black text-black/55 transition hover:border-[#039147]/30 hover:bg-[#eaf8f0] hover:text-[#039147]"
-            >
-              Back to Career List
-            </button>
+            <span className="w-fit rounded-full border border-black/5 bg-white5 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-black/50">
+              {selectedCareer ? selectedCareer.status : "New Entry"}
+            </span>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
@@ -567,6 +579,15 @@ export default function AdminCareersPage() {
           ) : null}
 
           <div className="mt-8 flex flex-col gap-3 rounded-[24px] border border-black/5 bg-white5 p-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={returnToCareerList}
+              disabled={saving}
+              className="rounded-full border border-black/10 bg-white px-8 py-4 text-sm font-black text-black/60 transition hover:border-[#039147]/30 hover:bg-[#eaf8f0] hover:text-[#039147] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Back to Career List
+            </button>
+
             {form.id ? (
               <button
                 type="button"

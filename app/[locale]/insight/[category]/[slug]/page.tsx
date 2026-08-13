@@ -185,15 +185,9 @@ export default async function InsightDetailPage({
 
 
             <div className="prose prose-lg max-w-none">
-
-              <p className="text-xl leading-9 text-black/70">
-                {data.excerpt}
-              </p>
-
-
               <RichTextContent
                 content={data.content}
-                className="mt-10 text-base leading-9 text-black/80"
+                className="text-base leading-9 text-black/80"
               />
 
             </div>

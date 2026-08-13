@@ -53,6 +53,10 @@ export function sanitizeRichTextHtml(value: string | null | undefined) {
       ],
       allowedAttributes: {
         a: ["href", "name", "target", "rel"],
+        p: ["style"],
+        h1: ["style"],
+        h2: ["style"],
+        h3: ["style"],
         img: [
           "src",
           "alt",
@@ -64,6 +68,20 @@ export function sanitizeRichTextHtml(value: string | null | undefined) {
           "data-media-id",
           "data-variant",
         ],
+      },
+      allowedStyles: {
+        p: {
+          "text-align": [/^(?:left|center|right|justify)$/],
+        },
+        h1: {
+          "text-align": [/^(?:left|center|right|justify)$/],
+        },
+        h2: {
+          "text-align": [/^(?:left|center|right|justify)$/],
+        },
+        h3: {
+          "text-align": [/^(?:left|center|right|justify)$/],
+        },
       },
       allowedSchemes: ["http", "https", "mailto", "tel"],
       allowProtocolRelative: false,
