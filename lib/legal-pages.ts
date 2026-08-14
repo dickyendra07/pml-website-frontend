@@ -14,7 +14,7 @@ export type LegalPageContent = {
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
-  "http://localhost:4000";
+  "http://localhost:4000/api";
 
 export async function getLegalPage(
   type: "PRIVACY_POLICY" | "COOKIE_POLICY",
