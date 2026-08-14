@@ -16,19 +16,21 @@ RUN npm ci --ignore-scripts
 
 FROM base AS builder
 
+ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_MEDIA_URL
-ARG NEXT_PUBLIC_SITE_URL
 
+ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_PUBLIC_MEDIA_URL=${NEXT_PUBLIC_MEDIA_URL}
-ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN test -n "$NEXT_PUBLIC_API_URL" \
-  || (echo "NEXT_PUBLIC_API_URL build argument is required" && exit 1)
+RUN test -n "$NEXT_PUBLIC_SITE_URL" \
+  && test -n "$NEXT_PUBLIC_API_URL" \
+  && test -n "$NEXT_PUBLIC_MEDIA_URL" \
+  || (echo "NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_API_URL, and NEXT_PUBLIC_MEDIA_URL build arguments are required" && exit 1)
 
 RUN npm run build
 
