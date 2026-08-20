@@ -5,6 +5,7 @@ import "./globals.css";
 
 import GoogleTagManager from "@/components/analytics/GoogleTagManager";
 import { getSeoDefaults } from "@/lib/server-settings";
+import { SITE_URL } from "@/lib/site-url";
 
 const kalbeHelix = localFont({
   src: [
@@ -41,12 +42,10 @@ const kalbeHelix = localFont({
 export async function generateMetadata(): Promise<Metadata> {
   const seo = await getSeoDefaults();
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-  const isProductionSite =
-    siteUrl === "https://pharmametriclabs.com";
+  const isProductionSite = SITE_URL === "https://pharmametriclabs.com";
 
   return {
-    metadataBase: new URL("https://pharmametriclabs.com"),
+    metadataBase: new URL(SITE_URL),
     title: {
       default: seo.title,
       template: `%s | ${seo.companyName}`,
@@ -75,7 +74,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       locale: "en_US",
-      url: "https://pharmametriclabs.com",
+      url: SITE_URL,
       siteName: seo.companyName,
       title: seo.title,
       description: seo.description,

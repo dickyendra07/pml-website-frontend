@@ -1,8 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { locales } from "@/i18n/config";
-
-const baseUrl = "https://pharmametriclabs.com";
+import { SITE_URL } from "@/lib/site-url";
 
 const routes = [
   { path: "", priority: 1, changeFrequency: "weekly" as const },
@@ -113,11 +112,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return routes.flatMap((route) => {
     const languageAlternates = Object.fromEntries(
-      locales.map((locale) => [locale, `${baseUrl}/${locale}${route.path}`]),
+      locales.map((locale) => [locale, `${SITE_URL}/${locale}${route.path}`]),
     );
 
     return locales.map((locale) => ({
-      url: `${baseUrl}/${locale}${route.path}`,
+      url: `${SITE_URL}/${locale}${route.path}`,
       lastModified,
       changeFrequency: route.changeFrequency,
       priority: route.priority,

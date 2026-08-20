@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { resolveMediaUrl, type MediaSource } from "@/lib/media";
+import { SITE_URL } from "@/lib/site-url";
 
 export type PageSeo = {
   path: string;
@@ -23,7 +24,6 @@ const API_BASE_URL =
 const hasApiBaseUrl = API_BASE_URL.length > 0;
 
 const SITE_NAME = "Pharma Metric Labs";
-const SITE_URL = "https://pharmametriclabs.com";
 const DEFAULT_OG_IMAGE = "/images/pml/hero-lab-hexagon.png";
 
 function getLocaleMetadata(path: string) {

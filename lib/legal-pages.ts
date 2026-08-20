@@ -14,11 +14,15 @@ export type LegalPageContent = {
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
-  "http://localhost:4000/api";
+  (process.env.NODE_ENV === "development" ? "http://localhost:4000/api" : "");
 
 export async function getLegalPage(
   type: "PRIVACY_POLICY" | "COOKIE_POLICY",
 ): Promise<LegalPageContent | null> {
+  if (!API_BASE_URL) {
+    return null;
+  }
+
   try {
     const response = await fetch(
       `${API_BASE_URL}/legal-pages/${type}`,
