@@ -26,6 +26,16 @@ const API_BASE_URL =
 
 const hasApiBaseUrl = API_BASE_URL.length > 0;
 
+export class ApiRequestError extends Error {
+  constructor(
+    message: string,
+    readonly status?: number,
+  ) {
+    super(message);
+    this.name = "ApiRequestError";
+  }
+}
+
 
 export async function submitProposal(
   payload: ProposalPayload,
@@ -206,14 +216,18 @@ export async function getInsightBySlug(
   }
 
   const response = await fetch(
-    `${API_BASE_URL}/insights/${slug}?locale=${locale}`,
+    `${API_BASE_URL}/insights/${encodeURIComponent(slug)}?locale=${locale}`,
     {
       cache: "no-store",
     },
   );
 
-  if (!response.ok) {
+  if (response.status === 404) {
     return null;
+  }
+
+  if (!response.ok) {
+    throw new ApiRequestError("Failed to load insight.", response.status);
   }
 
   const item = (await response.json()) as InsightApiItem;
@@ -441,7 +455,6 @@ export type FacilityFrontendItem = {
 
 export async function getFacilities() {
   if (!hasApiBaseUrl) {
-    console.log("NO API BASE URL");
     return [];
   }
 

@@ -12,6 +12,8 @@ yarn-error.log*
 pnpm-debug.log*
 .env
 .env.*
+credentials.csv
+**/credentials.csv
 *.tsbuildinfo
 AGENTS.md
 CLAUDE.md

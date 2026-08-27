@@ -431,7 +431,7 @@ export default function AdminCataloguesPage() {
                   <input
                     value={form.fileUrl}
                     onChange={(event) => updateField("fileUrl", event.target.value)}
-                    placeholder="/uploads/catalogues/files/catalogue.pdf"
+                    placeholder="/api/media/read?key=catalogue-files%2Fcatalogue.pdf"
                     className="h-13 rounded-2xl border border-black/5 bg-white px-4 text-sm font-bold text-black outline-none transition placeholder:text-black/20 focus:border-[#039147] focus:ring-4 focus:ring-[#039147]/10"
                   />
 

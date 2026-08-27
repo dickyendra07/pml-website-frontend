@@ -4,6 +4,7 @@ const isProduction = process.env.NODE_ENV === "production";
 const isVercel = process.env.VERCEL === "1";
 const mediaOrigins = [
   process.env.NEXT_PUBLIC_MEDIA_URL,
+  process.env.NEXT_PUBLIC_MEDIA_DELIVERY_URL,
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, ""),
   ...(isProduction ? [] : ["http://localhost:4000"]),
 ]
@@ -11,7 +12,7 @@ const mediaOrigins = [
   .map((value) => new URL(value).origin);
 
 const remoteImagePatterns = [...new Set(mediaOrigins)].map(
-  (origin) => new URL("/uploads/**", origin),
+  (origin) => new URL("/**", origin),
 );
 
 const scriptSources = [

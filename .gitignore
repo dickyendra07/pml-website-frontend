@@ -7,6 +7,8 @@ out
 .env.development
 .DS_Store
 coverage
+credentials.csv
+**/credentials.csv
 components/admin/FacilityGalleryManager.before-grid-ui.tsx
 
 *.before-cms.tsx

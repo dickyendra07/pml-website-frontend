@@ -85,11 +85,24 @@ export function resolveMediaUrl(value: MediaSource) {
     return path;
   }
 
-  if (path === "/uploads" || path.startsWith("/uploads/")) {
+  if (
+    path === "/uploads" ||
+    path.startsWith("/uploads/") ||
+    path.startsWith("/api/media/read?")
+  ) {
     return MEDIA_BASE_URL
       ? `${MEDIA_BASE_URL}${path}`
       : path;
   }
 
   return path;
+}
+
+export function shouldBypassImageOptimization(value: MediaSource) {
+  const url = resolveMediaUrl(value);
+  if (!url) return false;
+
+  // Direct provider signatures expire. Stable PML media endpoints and CDN URLs
+  // remain optimizable because they do not embed expiring credentials.
+  return /[?&](X-Amz-Signature|Signature|AccessKeyId|AWSAccessKeyId)=/i.test(url);
 }

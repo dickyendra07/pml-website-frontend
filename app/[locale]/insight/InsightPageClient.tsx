@@ -108,7 +108,7 @@ export default function InsightPage({ locale }: InsightPageProps) {
 
     async function loadInsights() {
       try {
-        const data = await getInsights();
+        const data = await getInsights(undefined, locale);
 
         if (!isMounted) return;
 
@@ -126,7 +126,7 @@ export default function InsightPage({ locale }: InsightPageProps) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [locale]);
 
   const featured = useMemo(() => {
     return insights.find((item) => item.isFeatured) || insights[0] || null;

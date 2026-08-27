@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import type { InsightItem } from "@/lib/api";
-import { resolveMediaUrl } from "@/lib/media";
+import { resolveMediaUrl, shouldBypassImageOptimization } from "@/lib/media";
 
 type InsightRelatedProps = {
   items: InsightItem[];
@@ -71,6 +71,7 @@ export default function InsightRelated({
                   }
                   alt={item.title}
                   fill
+                  unoptimized={shouldBypassImageOptimization(item.coverImage)}
                   className="object-cover transition duration-700 group-hover:scale-105"
                 />
 

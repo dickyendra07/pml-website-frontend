@@ -619,15 +619,11 @@ export default function AdminMediaPage() {
         type: form.type,
       };
 
-      console.log("MEDIA SAVE PAYLOAD:", payload);
-
       const updated = await updateAdminMediaAsset(
         token,
         form.id,
         payload,
       );
-
-      console.log("MEDIA SAVE RESPONSE:", updated);
 
       setForm(mapMediaToForm(updated));
       setMessageTone("success");

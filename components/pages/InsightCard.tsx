@@ -5,7 +5,7 @@ import { InsightItem as StaticInsightItem } from "@/data/insights";
 import { localizeHref } from "@/i18n/client";
 import type { Locale } from "@/i18n/config";
 import { InsightItem as ApiInsightItem } from "@/lib/api";
-import { resolveMediaUrl } from "@/lib/media";
+import { resolveMediaUrl, shouldBypassImageOptimization } from "@/lib/media";
 
 type InsightCardItem = StaticInsightItem | ApiInsightItem;
 
@@ -76,8 +76,7 @@ export default function InsightCard({
   const category = item.category;
   const image = getImage(item);
   const categoryLabels = isIndonesian ? categoryLabelId : categoryLabelEn;
-  const isUploadImage =
-    image.startsWith("http://localhost") || image.includes("/uploads/");
+  const bypassOptimization = shouldBypassImageOptimization(image);
 
   const articleHref = localizeHref(
     `/insight/${category}/${item.slug}`,
@@ -100,7 +99,7 @@ export default function InsightCard({
           src={image}
           alt={item.title}
           fill
-          unoptimized={isUploadImage}
+          unoptimized={bypassOptimization}
           className="object-cover opacity-90 transition duration-700 group-hover:scale-105"
         />
 
