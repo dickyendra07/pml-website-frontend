@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 
+import MediaImage from "@/components/MediaImage";
 import { InsightItem as StaticInsightItem } from "@/data/insights";
 import { localizeHref } from "@/i18n/client";
 import type { Locale } from "@/i18n/config";
@@ -95,7 +95,7 @@ export default function InsightCard({
       <div
         className={`relative overflow-hidden bg-black ${featured ? "aspect-[16/10] md:aspect-[16/8.5]" : "aspect-[16/10]"}`}
       >
-        <Image
+        <MediaImage
           src={image}
           alt={item.title}
           fill

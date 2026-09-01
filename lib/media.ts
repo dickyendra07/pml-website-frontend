@@ -1,11 +1,10 @@
-const MEDIA_BASE_URL =
-  (
-    process.env.NEXT_PUBLIC_MEDIA_URL ||
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-    (process.env.NODE_ENV === "development"
-      ? "http://localhost:4000"
-      : "")
-  ).replace(/\/$/, "");
+const DEVELOPMENT_API_BASE_URL =
+  process.env.NODE_ENV === "development" ? "http://localhost:4000/api" : "";
+
+const CONFIGURED_API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || DEVELOPMENT_API_BASE_URL;
+
+const CONFIGURED_LEGACY_MEDIA_BASE_URL = process.env.NEXT_PUBLIC_MEDIA_URL;
 
 export type MediaSource =
   | string
@@ -32,6 +31,19 @@ export type MediaReference = {
   url: string;
   variant: MediaVariantName;
 };
+
+export type MediaUrlOptions = {
+  apiBaseUrl?: string;
+  legacyMediaBaseUrl?: string;
+};
+
+function withoutTrailingSlash(value: string | undefined) {
+  return (value || "").trim().replace(/\/$/, "");
+}
+
+function apiOrigin(value: string | undefined) {
+  return withoutTrailingSlash(value).replace(/\/api\/?$/, "");
+}
 
 export function createMediaReference(
   value: MediaSource,
@@ -76,7 +88,10 @@ function getMediaPath(
   return "";
 }
 
-export function resolveMediaUrl(value: MediaSource) {
+export function resolveMediaUrl(
+  value: MediaSource,
+  options: MediaUrlOptions = {},
+) {
   const path = getMediaPath(value);
 
   if (!path) return "";
@@ -85,14 +100,22 @@ export function resolveMediaUrl(value: MediaSource) {
     return path;
   }
 
-  if (
-    path === "/uploads" ||
-    path.startsWith("/uploads/") ||
-    path.startsWith("/api/media/read?")
-  ) {
-    return MEDIA_BASE_URL
-      ? `${MEDIA_BASE_URL}${path}`
-      : path;
+  if (path.startsWith("/api/media/read?")) {
+    const cmsOrigin = apiOrigin(
+      options.apiBaseUrl ?? CONFIGURED_API_BASE_URL,
+    );
+
+    return cmsOrigin ? `${cmsOrigin}${path}` : path;
+  }
+
+  if (path === "/uploads" || path.startsWith("/uploads/")) {
+    const legacyOrigin = withoutTrailingSlash(
+      options.legacyMediaBaseUrl ??
+        CONFIGURED_LEGACY_MEDIA_BASE_URL ??
+        apiOrigin(options.apiBaseUrl ?? CONFIGURED_API_BASE_URL),
+    );
+
+    return legacyOrigin ? `${legacyOrigin}${path}` : path;
   }
 
   return path;
@@ -102,7 +125,32 @@ export function shouldBypassImageOptimization(value: MediaSource) {
   const url = resolveMediaUrl(value);
   if (!url) return false;
 
-  // Direct provider signatures expire. Stable PML media endpoints and CDN URLs
-  // remain optimizable because they do not embed expiring credentials.
-  return /[?&](X-Amz-Signature|Signature|AccessKeyId|AWSAccessKeyId)=/i.test(url);
+  // Browser delivery is the stable path for private backend redirects and
+  // legacy files. It avoids coupling rendering to the optimizer's build-time
+  // allowlist while preserving the backend's temporary signed URL security.
+  if (
+    url.startsWith("/api/media/read?") ||
+    url === "/uploads" ||
+    url.startsWith("/uploads/")
+  ) {
+    return true;
+  }
+
+  try {
+    const parsed = new URL(url);
+
+    if (
+      parsed.pathname === "/api/media/read" ||
+      parsed.pathname === "/uploads" ||
+      parsed.pathname.startsWith("/uploads/")
+    ) {
+      return true;
+    }
+  } catch {
+    // Non-absolute application paths are handled above.
+  }
+
+  return /[?&](X-Amz-Signature|Signature|AccessKeyId|AWSAccessKeyId)=/i.test(
+    url,
+  );
 }

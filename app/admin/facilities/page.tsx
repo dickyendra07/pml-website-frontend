@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import MediaImage from "@/components/MediaImage";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminState from "@/components/admin/AdminState";
 import MediaPicker from "@/components/admin/MediaPicker";
@@ -450,7 +450,7 @@ export default function AdminFacilitiesPage() {
                   >
                     <div className="relative mb-4 h-36 overflow-hidden rounded-[18px] bg-[#f6faf7]">
                       {item.image ? (
-                        <Image
+                        <MediaImage
                           src={resolveMediaUrl(item.image)}
                           alt={item.titleEn || item.key}
                           fill

@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import MediaImage from "@/components/MediaImage";
 import { localizeHref } from "@/i18n/client";
 import type { Locale } from "@/i18n/config";
 import { resolveMediaUrl, type MediaSource } from "@/lib/media";
@@ -35,8 +35,6 @@ const API_BASE_URL =
   (process.env.NODE_ENV === "development" ? "http://localhost:4000/api" : "");
 
 const hasApiBaseUrl = API_BASE_URL.length > 0;
-
-const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
 
 function getStorageKey(popupId: string) {
   return `pml_popup_closed_${popupId}`;
@@ -177,17 +175,13 @@ export default function HomepagePopup({ locale }: HomepagePopupProps) {
     <div
       className={`relative overflow-hidden bg-black ${layoutConfig.imageHeight}`}
     >
-      <Image
+      <MediaImage
         src={imageUrl}
         alt=""
         fill
         priority={false}
         sizes={layoutConfig.imageSizes}
         className="object-cover opacity-90"
-        unoptimized={
-          imageUrl.startsWith("http://localhost") ||
-          imageUrl.startsWith(API_ORIGIN)
-        }
       />
 
       <div className="absolute inset-0 bg-gradient-to-br from-black/35 via-black/25 to-[#039147]/55" />

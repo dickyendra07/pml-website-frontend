@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useRef } from "react";
 
+import MediaImage from "@/components/MediaImage";
 import type { Locale } from "@/i18n/config";
 import type { CareerDocumentationItem } from "@/lib/api";
 
@@ -107,13 +107,12 @@ export default function CareerDocumentationGallery({
                 className="group min-w-[86%] snap-start overflow-hidden rounded-[30px] border border-[#039147]/10 bg-[#f7fbf8] shadow-[0_22px_65px_rgba(3,145,71,0.09)] sm:min-w-[48%] xl:min-w-[32%]"
               >
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#eaf8f0]">
-                  <Image
+                  <MediaImage
                     src={item.image}
                     alt={alt}
                     fill
                     sizes="(max-width: 640px) 86vw, (max-width: 1280px) 48vw, 32vw"
                     className="object-cover transition duration-500 group-hover:scale-[1.035]"
-                    unoptimized={item.image.includes("/uploads/")}
                   />
                   <span className="absolute left-4 top-4 rounded-full bg-white/92 px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-[#039147] shadow-sm backdrop-blur">
                     {item.category}

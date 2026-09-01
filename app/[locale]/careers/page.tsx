@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import MediaImage from "@/components/MediaImage";
 import { isLocale, type Locale } from "@/i18n/config";
 import { localizeHref } from "@/i18n/client";
 import {
@@ -418,7 +419,7 @@ export default async function CareersPage({ params }: CareersPageProps) {
                         >
                           {career.featuredImage ? (
                             <span className="relative block aspect-[4/3] overflow-hidden rounded-[22px] bg-[#eaf8f0] md:aspect-auto md:h-full md:min-h-[180px]">
-                              <Image
+                              <MediaImage
                                 src={career.featuredImage}
                                 alt={
                                   career.featuredMedia?.altText ||
@@ -428,9 +429,6 @@ export default async function CareersPage({ params }: CareersPageProps) {
                                 fill
                                 sizes="(max-width: 767px) 100vw, 220px"
                                 className="object-cover transition duration-500 group-hover:scale-[1.025]"
-                                unoptimized={career.featuredImage.includes(
-                                  "/uploads/",
-                                )}
                               />
                             </span>
                           ) : null}

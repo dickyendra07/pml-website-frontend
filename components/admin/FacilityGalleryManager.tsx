@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
+import MediaImage from "@/components/MediaImage";
 import MediaPicker from "@/components/admin/MediaPicker";
 import { resolveMediaUrl } from "@/lib/media";
 
@@ -121,7 +121,7 @@ export default function FacilityGalleryManager({
             >
               <div className="relative aspect-[4/3] overflow-hidden bg-[#f3f7f4]">
                 {item.image ? (
-                  <Image
+                  <MediaImage
                     src={resolveMediaUrl(item.image)}
                     alt=""
                     fill

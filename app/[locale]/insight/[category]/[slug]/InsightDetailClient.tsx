@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import MediaImage from "@/components/MediaImage";
 import InsightSidebar from "@/components/pages/InsightSidebar";
 import RichTextContent from "@/components/pages/RichTextContent";
 import type { Locale } from "@/i18n/config";
@@ -113,7 +113,14 @@ export default function InsightDetailClient({
     <main className="bg-white text-black">
       <section className="relative overflow-hidden">
         <div className="relative min-h-[620px]">
-          <Image src={coverImage} alt={data.title} fill priority unoptimized={bypassOptimization} className="object-cover" />
+          <MediaImage
+            src={coverImage}
+            alt={data.title}
+            fill
+            priority
+            unoptimized={bypassOptimization}
+            className="object-cover"
+          />
           <div className="absolute inset-0 bg-black/25" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/20" />
           <div className="pml-container relative flex min-h-[620px] items-end pb-16 md:pb-20">

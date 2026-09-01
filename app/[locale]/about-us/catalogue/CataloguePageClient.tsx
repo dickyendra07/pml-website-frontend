@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
+import MediaImage from "@/components/MediaImage";
 import {
   CatalogueItem,
   getCatalogues,
@@ -264,15 +265,12 @@ export default function CataloguePage({ locale }: CataloguePageProps) {
                 className="group w-[82vw] max-w-[350px] shrink-0 snap-start overflow-hidden rounded-[30px] border border-black/5 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(0,0,0,0.12)] md:w-auto md:max-w-none md:rounded-[34px]"
               >
                 <div className="relative h-48 overflow-hidden bg-black md:h-56">
-                  <Image
+                  <MediaImage
                     src={
                       resolveMediaUrl(catalogue.coverImage) ||
                       "/images/pml/cta-lab-background.png"
                     }
                     alt={catalogue.title}
-                    unoptimized={Boolean(
-                      catalogue.coverImage?.startsWith("/uploads"),
-                    )}
                     fill
                     className="object-cover opacity-90 transition duration-700 group-hover:scale-105"
                   />
