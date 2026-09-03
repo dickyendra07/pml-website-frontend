@@ -1,6 +1,7 @@
 import sanitizeHtml from "sanitize-html";
 
 import { resolveMediaUrl } from "@/lib/media";
+import { normalizeHeadingMistakes } from "@/lib/rich-text-normalization";
 
 function escapeHtml(value: string) {
   return value
@@ -18,21 +19,6 @@ function normalizeLegacyPlainText(value: string) {
     .split(/\n{2,}/)
     .map((paragraph) => `<p>${escapeHtml(paragraph).replaceAll("\n", "<br>")}</p>`)
     .join("");
-}
-
-function normalizeHeadingMistakes(value: string) {
-  return value.replace(
-    /<h3>([\s\S]*?)<\/h3>/gi,
-    (_match, content) => {
-      const cleanText = content.replace(/<[^>]+>/g, "").trim();
-
-      if (cleanText.length > 120) {
-        return `<p>${content}</p>`;
-      }
-
-      return `<h3>${content}</h3>`;
-    },
-  );
 }
 
 export function sanitizeRichTextHtml(value: string | null | undefined) {

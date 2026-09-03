@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { defaultLocale, locales } from "@/i18n/config";
+import { isInternalHealthPath } from "@/lib/internal-health";
+import { isRequestHostAllowed } from "@/lib/request-host";
 
 function isPublicFile(pathname: string) {
   const lastSegment = pathname.slice(pathname.lastIndexOf("/") + 1);
@@ -14,10 +16,21 @@ function hasLocale(pathname: string) {
 }
 
 export function proxy(request: NextRequest) {
+  if (!isRequestHostAllowed(request.headers.get("host"))) {
+    return new NextResponse("Misdirected Request", { status: 421 });
+  }
+
   const { pathname } = request.nextUrl;
+
+  if (pathname.length > 1 && pathname.endsWith("/")) {
+    const url = new URL(request.url);
+    url.pathname = pathname.replace(/\/+$/, "");
+    return NextResponse.redirect(url, 308);
+  }
 
   if (
     pathname === "/" ||
+    isInternalHealthPath(pathname) ||
     hasLocale(pathname) ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/api") ||

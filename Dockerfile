@@ -20,11 +20,13 @@ ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_MEDIA_URL
 ARG NEXT_PUBLIC_MEDIA_DELIVERY_URL
+ARG CSP_MEDIA_ORIGINS
 
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_PUBLIC_MEDIA_URL=${NEXT_PUBLIC_MEDIA_URL}
 ENV NEXT_PUBLIC_MEDIA_DELIVERY_URL=${NEXT_PUBLIC_MEDIA_DELIVERY_URL}
+ENV CSP_MEDIA_ORIGINS=${CSP_MEDIA_ORIGINS}
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -32,7 +34,8 @@ COPY . .
 RUN test -n "$NEXT_PUBLIC_SITE_URL" \
   && test -n "$NEXT_PUBLIC_API_URL" \
   && test -n "$NEXT_PUBLIC_MEDIA_URL" \
-  || (echo "NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_API_URL, and NEXT_PUBLIC_MEDIA_URL build arguments are required" && exit 1)
+  && test -n "$CSP_MEDIA_ORIGINS" \
+  || (echo "NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_API_URL, NEXT_PUBLIC_MEDIA_URL, and CSP_MEDIA_ORIGINS build arguments are required" && exit 1)
 
 RUN npm run build
 
@@ -52,15 +55,19 @@ ENV HOSTNAME=0.0.0.0
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
 
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+# Keep application code read-only to the runtime user while preserving the
+# cache directory Next.js needs for image optimization and incremental output.
+RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next/cache
 
 USER nextjs
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD wget -q --spider http://127.0.0.1:3000/ || exit 1
+  CMD ["node", "-e", "const http=require('node:http');const host=(process.env.ALLOWED_HOSTS||'').split(',').map(value=>value.trim()).find(Boolean);if(!host)process.exit(1);const request=http.get({hostname:'127.0.0.1',port:process.env.PORT||3000,path:'/internal/health',headers:{Host:host}},response=>{response.resume();process.exit(response.statusCode===200?0:1)});request.setTimeout(4000,()=>request.destroy());request.on('error',()=>process.exit(1));"]
 
 CMD ["node", "server.js"]

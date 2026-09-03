@@ -10,19 +10,21 @@
     "test": "node --no-warnings --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
-    "@tiptap/extension-image": "^3.27.3",
-    "@tiptap/extension-link": "^3.27.3",
-    "@tiptap/extension-placeholder": "^3.27.3",
-    "@tiptap/extension-text-align": "^3.27.3",
-    "@tiptap/extension-underline": "^3.27.3",
-    "@tiptap/react": "^3.27.3",
-    "@tiptap/starter-kit": "^3.27.3",
+    "@tiptap/core": "3.30.4",
+    "@tiptap/extension-image": "3.30.4",
+    "@tiptap/extension-link": "3.30.4",
+    "@tiptap/extension-placeholder": "3.30.4",
+    "@tiptap/extension-text-align": "3.30.4",
+    "@tiptap/extension-underline": "3.30.4",
+    "@tiptap/pm": "3.30.4",
+    "@tiptap/react": "3.30.4",
+    "@tiptap/starter-kit": "3.30.4",
     "@types/sanitize-html": "^2.16.1",
     "next": "16.3.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-easy-crop": "^6.2.3",
-    "sanitize-html": "^2.17.6",
+    "sanitize-html": "2.17.7",
     "sharp": "0.35.3"
   },
   "devDependencies": {
@@ -36,6 +38,9 @@
     "typescript": "^5"
   },
   "overrides": {
-    "postcss": "8.5.23"
+    "postcss": "8.5.23",
+    "browserslist": "4.28.7",
+    "@tiptap/extension-bubble-menu": "3.30.4",
+    "@tiptap/extension-floating-menu": "3.30.4"
   }
 }

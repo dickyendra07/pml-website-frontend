@@ -1,42 +1,39 @@
 import type { NextConfig } from "next";
+import {
+  buildContentSecurityPolicy,
+  parseTrustedOrigins,
+} from "./lib/security/csp";
 
 const isProduction = process.env.NODE_ENV === "production";
 const isVercel = process.env.VERCEL === "1";
+const configuredApiOrigin = process.env.NEXT_PUBLIC_API_URL?.replace(
+  /\/api\/?$/,
+  "",
+);
 const mediaOrigins = [
   process.env.NEXT_PUBLIC_MEDIA_URL,
   process.env.NEXT_PUBLIC_MEDIA_DELIVERY_URL,
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, ""),
+  configuredApiOrigin,
   ...(isProduction ? [] : ["http://localhost:4000"]),
 ]
   .filter((value): value is string => Boolean(value))
-  .map((value) => new URL(value).origin);
+  .flatMap((value) =>
+    parseTrustedOrigins(value, {
+      allowHttp: !isProduction,
+      variableName: "configured media origin",
+    }),
+  );
 
 const remoteImagePatterns = [...new Set(mediaOrigins)].map(
   (origin) => new URL("/**", origin),
 );
 
-const scriptSources = [
-  "'self'",
-  "'unsafe-inline'",
-  ...(isProduction ? [] : ["'unsafe-eval'"]),
-  "https://vercel.live",
-  "https://www.googletagmanager.com",
-];
-
-const contentSecurityPolicy = [
-  "default-src 'self'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-  "object-src 'none'",
-  `script-src ${scriptSources.join(" ")}`,
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https: http://localhost:4000 http://127.0.0.1:4000",
-  "font-src 'self' data:",
-  "connect-src 'self' https: http://localhost:4000 http://127.0.0.1:4000 ws: wss:",
-  "frame-src 'self' https://vercel.live https://www.google.com https://maps.google.com",
-  ...(isProduction ? ["upgrade-insecure-requests"] : []),
-].join("; ");
+const contentSecurityPolicy = buildContentSecurityPolicy({
+  additionalImageOrigins: process.env.CSP_MEDIA_ORIGINS,
+  isProduction,
+  isVercel,
+  mediaOrigins,
+});
 
 const securityHeaders = [
   {
@@ -64,6 +61,10 @@ const securityHeaders = [
     value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
   },
   {
+    key: "Cross-Origin-Opener-Policy",
+    value: "same-origin-allow-popups",
+  },
+  {
     key: "Content-Security-Policy",
     value: contentSecurityPolicy,
   },
@@ -75,6 +76,10 @@ const nextConfig: NextConfig = {
   // the runtime entrypoint.
   output: isVercel ? undefined : "standalone",
   poweredByHeader: false,
+  // Host validation must run before canonical path redirects. Next's built-in
+  // trailing-slash redirect runs ahead of proxy and would otherwise answer an
+  // untrusted Host header before the allowlist can evaluate it.
+  skipTrailingSlashRedirect: true,
 
   images: {
     remotePatterns: remoteImagePatterns,
@@ -86,6 +91,15 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: securityHeaders,
+      },
+      {
+        source: "/admin/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0",
+          },
+        ],
       },
     ];
   },
