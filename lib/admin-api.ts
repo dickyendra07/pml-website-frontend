@@ -1422,6 +1422,20 @@ export type LegalPage = {
   updatedAt: string;
 };
 
+export type LegalPagePayload = Partial<
+  Pick<
+    LegalPage,
+    | "titleEn"
+    | "contentEn"
+    | "seoTitleEn"
+    | "metaDescriptionEn"
+    | "titleId"
+    | "contentId"
+    | "seoTitleId"
+    | "metaDescriptionId"
+  >
+>;
+
 export async function getAdminLegalPages(
   token: string,
 ) {
@@ -1441,7 +1455,7 @@ export async function getAdminLegalPages(
 export async function updateAdminLegalPage(
   token: string,
   type: LegalPageType,
-  payload: Partial<LegalPage>,
+  payload: LegalPagePayload,
 ) {
   const response = await fetch(
     `${API_BASE_URL}/admin/legal-pages/${type}`,

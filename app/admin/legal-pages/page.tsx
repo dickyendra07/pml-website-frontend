@@ -132,12 +132,16 @@ export default function AdminLegalPagesPage() {
 
     try {
 
-      const updated =
-        await updateAdminLegalPage(
-          token,
-          selectedType,
-          selectedPage,
-        );
+      const updated = await updateAdminLegalPage(token, selectedType, {
+        titleEn: selectedPage.titleEn,
+        contentEn: selectedPage.contentEn,
+        seoTitleEn: selectedPage.seoTitleEn,
+        metaDescriptionEn: selectedPage.metaDescriptionEn,
+        titleId: selectedPage.titleId,
+        contentId: selectedPage.contentId,
+        seoTitleId: selectedPage.seoTitleId,
+        metaDescriptionId: selectedPage.metaDescriptionId,
+      });
 
 
       setForms((current) => ({
